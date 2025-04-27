@@ -1,4 +1,4 @@
-# Orama User App
+# Orama Fábrica App
 
 Aplicativo Flutter desenvolvido para registrar entrada de produtos no estoque da fábrica pelos operadores.
 
