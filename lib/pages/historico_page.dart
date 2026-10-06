@@ -52,11 +52,17 @@ class _HistoricoPageState extends State<HistoricoPage> {
         _aviso = null;
       });
     } on SemConexaoException catch (e) {
-      if (mounted) setState(() => _aviso = '${e.mensagem} O histórico do servidor não foi carregado.');
+      if (mounted) {
+        setState(() => _aviso = '${e.mensagem} O histórico do servidor não foi carregado.');
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() => _aviso = e.mensagem);
+      if (mounted) {
+        setState(() => _aviso = e.mensagem);
+      }
     } finally {
-      if (mounted) setState(() => _carregando = false);
+      if (mounted) {
+        setState(() => _carregando = false);
+      }
     }
   }
 

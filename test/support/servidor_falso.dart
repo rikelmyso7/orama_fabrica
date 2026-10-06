@@ -44,7 +44,9 @@ class ServidorFalso {
     requisicoes.add(r);
     if (offline) throw http.ClientException('sem rede', req.url);
     final rota = _rotas['${req.method} ${req.url.path}'];
-    if (rota == null) return problema(404, 'nao_encontrado', 'Rota sem resposta no teste: ${req.method} ${req.url.path}');
+    if (rota == null) {
+      return problema(404, 'nao_encontrado', 'Rota sem resposta no teste: ${req.method} ${req.url.path}');
+    }
     return rota(r);
   });
 

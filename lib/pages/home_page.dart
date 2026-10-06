@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import '../auth/auth_store.dart';
 import '../data/catalogo_store.dart';
 import '../data/fila_entradas.dart';
+import '../data/fila_operacoes.dart';
 import '../update/atualizacao.dart';
 import 'atualizacao_dialog.dart';
 import 'estoque_page.dart';
 import 'historico_page.dart';
+import 'nova_producao_page.dart';
 
 /// Tela principal: hoje (histórico e entradas aguardando envio) e estoque. Também mantém o app
 /// sincronizado: ao abrir, ao voltar para o app e a cada minuto, envia o que ficou na fila.
@@ -62,9 +64,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (usuario == null) return null;
     final catalogo = context.read<CatalogoStore>();
     final fila = context.read<FilaEntradas>();
+    final filaOperacoes = context.read<FilaOperacoes>();
     if (catalogo.precisaAtualizar) unawaited(catalogo.atualizar());
     if (usuario.podeLancar && fila.aguardando(usuario.id) > 0) {
-      return fila.enviar(usuario.id);
+      final resultado = await fila.enviar(usuario.id);
+      if (filaOperacoes.aguardando(usuario.id) > 0) {
+        await filaOperacoes.enviar(usuario.id);
+      }
+      return resultado;
+    }
+    if (usuario.podeLancar && filaOperacoes.aguardando(usuario.id) > 0) {
+      return filaOperacoes.enviar(usuario.id);
     }
     return null;
   }
@@ -100,6 +110,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: Text(_aba == 0 ? 'Hoje' : 'Estoque'),
         actions: [
+          if (usuario?.podeLancar ?? false)
+            IconButton(
+              tooltip: 'Nova produção',
+              icon: const Icon(Icons.precision_manufacturing_outlined),
+              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NovaProducaoPage())),
+            ),
           const _IndicadorDeEnvio(),
           PopupMenuButton<String>(
             tooltip: 'Menu',
@@ -135,19 +151,25 @@ class _IndicadorDeEnvio extends StatelessWidget {
   Widget build(BuildContext context) {
     final usuario = context.watch<AuthStore>().usuario;
     final fila = context.watch<FilaEntradas>();
+    final filaOperacoes = context.watch<FilaOperacoes>();
     if (usuario == null) return const SizedBox.shrink();
-    if (fila.enviando) {
+    if (fila.enviando || filaOperacoes.enviando) {
       return const Padding(
         padding: EdgeInsets.all(14),
         child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
       );
     }
-    final aguardando = fila.aguardando(usuario.id);
-    final recusadas = fila.recusadas(usuario.id);
+    final aguardando = fila.aguardando(usuario.id) + filaOperacoes.aguardando(usuario.id);
+    final recusadas = fila.recusadas(usuario.id) + filaOperacoes.recusadas(usuario.id);
     if (aguardando == 0 && recusadas == 0) return const SizedBox.shrink();
     return IconButton(
       tooltip: recusadas > 0 ? '$recusadas recusadas, $aguardando aguardando envio' : '$aguardando aguardando envio',
-      onPressed: aguardando == 0 ? null : () => fila.enviar(usuario.id),
+      onPressed: aguardando == 0
+          ? null
+          : () async {
+              await fila.enviar(usuario.id);
+              await filaOperacoes.enviar(usuario.id);
+            },
       icon: Badge(
         label: Text('${aguardando + recusadas}'),
         backgroundColor: recusadas > 0 ? Colors.red : Colors.orange,

@@ -207,9 +207,18 @@ class _Corpo extends StatelessWidget {
                     final item = itens[i];
                     final local = catalogo.local(item.localPadraoId)?.nome;
                     final quantas = rascunho.totalDoItem(item.id);
+                    Categoria? categoria;
+                    for (final c in catalogo.categorias) {
+                      if (c.id == item.categoriaId) {
+                        categoria = c;
+                        break;
+                      }
+                    }
                     return ListTile(
-                      title: Text(item.nome),
+                      title: Text([if (item.sku != null) item.sku!, item.nome].join(' · ')),
                       subtitle: Text([
+                        if (categoria != null) categoria.nome,
+                        if (item.grupoVisual.isNotEmpty) item.grupoVisual,
                         if (local != null) local,
                         item.origemSugerida == 'producao' ? 'produção' : 'compra',
                         if (item.controlaRecipiente) 'pesar cada recipiente',

@@ -98,15 +98,20 @@ class Variacao {
 
 class ItemCatalogo {
   final String id;
+  final String? sku;
   final String nome;
   final String categoriaId;
   final String? subgrupo;
+  final String? tamanho;
 
   /// g, ml ou un.
   final String unidadeBase;
 
   /// producao (feito na fábrica) ou terceiros (comprado).
   final String? nivel;
+  final String? tipoItem;
+  final String? produtoBaseId;
+  final double? pesoMedioG;
   final String? temperatura;
   final String? destino;
   final bool controlaValidade;
@@ -122,8 +127,13 @@ class ItemCatalogo {
     required this.nome,
     required this.categoriaId,
     required this.unidadeBase,
+    this.sku,
     this.subgrupo,
+    this.tamanho,
     this.nivel,
+    this.tipoItem,
+    this.produtoBaseId,
+    this.pesoMedioG,
     this.temperatura,
     this.destino,
     this.controlaValidade = false,
@@ -135,11 +145,16 @@ class ItemCatalogo {
 
   factory ItemCatalogo.fromJson(Map<String, dynamic> j) => ItemCatalogo(
         id: j['id'] as String,
+        sku: j['sku'] as String?,
         nome: j['nome'] as String,
         categoriaId: j['categoriaId'] as String,
         subgrupo: j['subgrupo'] as String?,
+        tamanho: j['tamanho'] as String?,
         unidadeBase: j['unidadeBase'] as String,
         nivel: j['nivel'] as String?,
+        tipoItem: j['tipoItem'] as String?,
+        produtoBaseId: j['produtoBaseId'] as String?,
+        pesoMedioG: j['pesoMedioG'] == null ? null : _numero(j['pesoMedioG']),
         temperatura: j['temperatura'] as String?,
         destino: j['destino'] as String?,
         controlaValidade: (j['controlaValidade'] as bool?) ?? false,
@@ -153,11 +168,16 @@ class ItemCatalogo {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'sku': sku,
         'nome': nome,
         'categoriaId': categoriaId,
         'subgrupo': subgrupo,
+        'tamanho': tamanho,
         'unidadeBase': unidadeBase,
         'nivel': nivel,
+        'tipoItem': tipoItem,
+        'produtoBaseId': produtoBaseId,
+        'pesoMedioG': pesoMedioG,
         'temperatura': temperatura,
         'destino': destino,
         'controlaValidade': controlaValidade,
@@ -170,6 +190,8 @@ class ItemCatalogo {
   /// Origem sugerida na entrada: o que a fábrica produz entra como produção, o resto como compra.
   String get origemSugerida => nivel == 'producao' ? 'producao' : 'compra';
 
+  String get grupoVisual => [subgrupo, tamanho].whereType<String>().where((v) => v.trim().isNotEmpty).join(' · ');
+
   /// Unidades que a API aceita para este item: a base, kg ou L (convertidos), e as embalagens
   /// cadastradas. Balde, cuba e pote só pesam: g e kg.
   List<String> get unidadesPermitidas {
@@ -181,6 +203,40 @@ class ItemCatalogo {
     if (controlaRecipiente) return ['g', 'kg'];
     return [...base, ...embalagens.map((e) => e.embalagem)];
   }
+}
+
+class ResultadoOperacao {
+  final String id;
+  final String status;
+  final String? etiqueta;
+  final double? qtdBase;
+
+  const ResultadoOperacao({required this.id, required this.status, this.etiqueta, this.qtdBase});
+
+  factory ResultadoOperacao.fromJson(Map<String, dynamic> j) => ResultadoOperacao(
+        id: j['id'] as String,
+        status: j['status'] as String,
+        etiqueta: j['etiqueta'] as String?,
+        qtdBase: j['qtdBase'] == null ? null : _numero(j['qtdBase']),
+      );
+}
+
+class OperacaoCriada {
+  final String id;
+  final String codigo;
+  final String lotePrincipal;
+  final List<ResultadoOperacao> resultados;
+
+  const OperacaoCriada({required this.id, required this.codigo, required this.lotePrincipal, required this.resultados});
+
+  factory OperacaoCriada.fromJson(Map<String, dynamic> j) => OperacaoCriada(
+        id: j['id'] as String,
+        codigo: j['codigo'] as String,
+        lotePrincipal: j['lotePrincipal'] as String,
+        resultados: ((j['resultados'] as List?) ?? const [])
+            .map((e) => ResultadoOperacao.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
 }
 
 class Catalogo {

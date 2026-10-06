@@ -49,11 +49,17 @@ class _EstoquePageState extends State<EstoquePage> {
         _aviso = null;
       });
     } on SemConexaoException catch (e) {
-      if (mounted) setState(() => _aviso = '${e.mensagem} O saldo não foi carregado.');
+      if (mounted) {
+        setState(() => _aviso = '${e.mensagem} O saldo não foi carregado.');
+      }
     } on ApiException catch (e) {
-      if (mounted) setState(() => _aviso = e.mensagem);
+      if (mounted) {
+        setState(() => _aviso = e.mensagem);
+      }
     } finally {
-      if (mounted) setState(() => _carregando = false);
+      if (mounted) {
+        setState(() => _carregando = false);
+      }
     }
   }
 

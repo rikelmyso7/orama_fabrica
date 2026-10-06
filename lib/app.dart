@@ -8,6 +8,7 @@ import 'api/orama_api.dart';
 import 'auth/auth_store.dart';
 import 'data/catalogo_store.dart';
 import 'data/fila_entradas.dart';
+import 'data/fila_operacoes.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/splash_page.dart';
@@ -27,6 +28,7 @@ class AppDependencias {
     required this.auth,
     required this.catalogo,
     required this.fila,
+    required this.filaOperacoes,
     this.atualizacao,
   });
 
@@ -35,6 +37,7 @@ class AppDependencias {
   final AuthStore auth;
   final CatalogoStore catalogo;
   final FilaEntradas fila;
+  final FilaOperacoes filaOperacoes;
 
   /// Verificação de versão nova pelos releases do GitHub. Nulo desliga a consulta (testes, web).
   final ServicoAtualizacao? atualizacao;
@@ -54,6 +57,7 @@ class AppDependencias {
       auth: AuthStore(api, client, secure),
       catalogo: CatalogoStore(api, store),
       fila: FilaEntradas(api, store),
+      filaOperacoes: FilaOperacoes(api, store),
       atualizacao: atualizacao,
     );
   }
@@ -81,6 +85,7 @@ class OramaApp extends StatelessWidget {
         ChangeNotifierProvider<AuthStore>.value(value: deps.auth),
         ChangeNotifierProvider<CatalogoStore>.value(value: deps.catalogo),
         ChangeNotifierProvider<FilaEntradas>.value(value: deps.fila),
+        ChangeNotifierProvider<FilaOperacoes>.value(value: deps.filaOperacoes),
         Provider<ServicoAtualizacao?>.value(value: deps.atualizacao),
       ],
       child: MaterialApp(

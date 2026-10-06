@@ -125,7 +125,9 @@ class FilaEntradas extends ChangeNotifier {
         final porId = {for (final r in resultados) r.id: r};
         for (final linha in lote) {
           final r = porId[linha.id];
-          if (r == null) continue; // resposta incompleta: a linha continua na fila
+          if (r == null) {
+            continue; // resposta incompleta: a linha continua na fila
+          }
           if (r.registrada) {
             _itens.removeWhere((x) => x.id == linha.id);
             enviadas++;

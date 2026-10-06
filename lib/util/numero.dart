@@ -30,8 +30,12 @@ class Numero {
   /// "7,95 kg" para 7950 g; "850 g" para 850 g. Outras unidades saem como vieram.
   static String formatarBase(double valor, String unidadeBase) {
     final f = NumberFormat('#,##0.###', 'pt_BR');
-    if (unidadeBase == 'g' && valor.abs() >= 1000) return '${f.format(valor / 1000)} kg';
-    if (unidadeBase == 'ml' && valor.abs() >= 1000) return '${f.format(valor / 1000)} L';
+    if (unidadeBase == 'g' && valor.abs() >= 1000) {
+      return '${f.format(valor / 1000)} kg';
+    }
+    if (unidadeBase == 'ml' && valor.abs() >= 1000) {
+      return '${f.format(valor / 1000)} L';
+    }
     return '${f.format(valor)} $unidadeBase';
   }
 

@@ -30,6 +30,19 @@ class OramaApi {
         .toList();
   }
 
+  Future<String> loteSugerido({DateTime? data}) async {
+    final resposta = await _client.get('/operacoes/lote-sugerido', query: {
+      if (data != null) 'data': _dia(data),
+    }) as Map<String, dynamic>;
+    return resposta['lote'] as String;
+  }
+
+  /// Envia uma operação completa. Consumos e entradas são gravados na mesma transação pela API.
+  Future<OperacaoCriada> enviarOperacao(Map<String, dynamic> operacao) async {
+    final resposta = await _client.post('/operacoes', corpo: operacao) as Map<String, dynamic>;
+    return OperacaoCriada.fromJson(resposta);
+  }
+
   /// Histórico, do mais recente para o mais antigo. [de] e [ate] são dias do calendário, ambos incluídos.
   Future<List<Movimento>> movimentos({DateTime? de, DateTime? ate, String? itemId, int limite = 200}) async {
     final resposta = await _client.get('/movimentos', query: {

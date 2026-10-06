@@ -74,9 +74,16 @@ class CatalogoStore extends ChangeNotifier {
     final todos = catalogo?.itens ?? const <ItemCatalogo>[];
     final filtrados = todos.where((i) {
       if (categoriaId != null && i.categoriaId != categoriaId) return false;
-      return busca.trim().isEmpty || Texto.contem(i.nome, busca);
+      if (busca.trim().isEmpty) return true;
+      return Texto.contem(i.nome, busca) ||
+          (i.sku != null && Texto.contem(i.sku!, busca)) ||
+          (i.subgrupo != null && Texto.contem(i.subgrupo!, busca)) ||
+          (i.tamanho != null && Texto.contem(i.tamanho!, busca));
     }).toList()
-      ..sort((a, b) => Texto.normalizar(a.nome).compareTo(Texto.normalizar(b.nome)));
+      ..sort((a, b) {
+        final grupo = Texto.normalizar(a.grupoVisual).compareTo(Texto.normalizar(b.grupoVisual));
+        return grupo == 0 ? Texto.normalizar(a.nome).compareTo(Texto.normalizar(b.nome)) : grupo;
+      });
     return filtrados;
   }
 }

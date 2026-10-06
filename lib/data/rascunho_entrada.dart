@@ -119,7 +119,9 @@ class RascunhoEntrada extends ChangeNotifier {
   /// Hoje vale a hora atual. Outro dia (lançamento atrasado) vale o meio-dia daquele dia.
   DateTime _momentoDoDia(DateTime dia) {
     final agora = _agora();
-    if (dia.year == agora.year && dia.month == agora.month && dia.day == agora.day) return agora;
+    if (dia.year == agora.year && dia.month == agora.month && dia.day == agora.day) {
+      return agora;
+    }
     return DateTime(dia.year, dia.month, dia.day, 12);
   }
 }
