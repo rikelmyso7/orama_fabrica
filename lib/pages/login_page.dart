@@ -47,7 +47,8 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  String? _obrigatorio(String? v) => (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null;
+  String? _obrigatorio(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Campo obrigatório' : null;
 
   @override
   Widget build(BuildContext context) {
@@ -63,7 +64,10 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const Text(
                     'Orama Fábrica',
-                    style: TextStyle(fontSize: 36, fontWeight: FontWeight.w600, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 36,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.white),
                   ),
                   const SizedBox(height: 24),
                   MyTextField(
@@ -79,14 +83,21 @@ class _LoginPageState extends State<LoginPage> {
                     validator: _obrigatorio,
                     prefixicon: const Icon(Icons.lock),
                     icon: IconButton(
-                      tooltip: _ocultarSenha ? 'Mostrar senha' : 'Esconder senha',
-                      onPressed: () => setState(() => _ocultarSenha = !_ocultarSenha),
-                      icon: Icon(_ocultarSenha ? Icons.visibility_off : Icons.visibility, color: Colors.grey),
+                      tooltip:
+                          _ocultarSenha ? 'Mostrar senha' : 'Esconder senha',
+                      onPressed: () =>
+                          setState(() => _ocultarSenha = !_ocultarSenha),
+                      icon: Icon(
+                          _ocultarSenha
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.grey),
                     ),
                   ),
                   if (_erro != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 25, vertical: 8),
                       child: Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(12),
@@ -94,7 +105,8 @@ class _LoginPageState extends State<LoginPage> {
                           color: Colors.red.shade50,
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(_erro!, style: TextStyle(color: Colors.red.shade900)),
+                        child: Text(_erro!,
+                            style: TextStyle(color: Colors.red.shade900)),
                       ),
                     ),
                   const SizedBox(height: 12),
@@ -103,7 +115,8 @@ class _LoginPageState extends State<LoginPage> {
                   else
                     ElevatedButton(
                       onPressed: _entrar,
-                      child: const Text('Entrar', style: TextStyle(color: Color(0xff60C03D))),
+                      child: const Text('Entrar',
+                          style: TextStyle(color: Color(0xff60C03D))),
                     ),
                 ],
               ),

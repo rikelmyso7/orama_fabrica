@@ -38,9 +38,13 @@ class AuthStore extends ChangeNotifier {
     final token = await _secure.ler(_chaveToken);
     final usuarioJson = await _secure.ler(_chaveUsuario);
     final expira = DateTime.tryParse(await _secure.ler(_chaveExpira) ?? '');
-    if (token != null && usuarioJson != null && expira != null && expira.isAfter(_agora())) {
+    if (token != null &&
+        usuarioJson != null &&
+        expira != null &&
+        expira.isAfter(_agora())) {
       try {
-        usuario = UsuarioLogado.fromJson(jsonDecode(usuarioJson) as Map<String, dynamic>);
+        usuario = UsuarioLogado.fromJson(
+            jsonDecode(usuarioJson) as Map<String, dynamic>);
         _client.token = token;
         estado = EstadoAuth.logado;
         notifyListeners();

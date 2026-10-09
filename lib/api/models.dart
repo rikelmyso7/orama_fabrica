@@ -10,7 +10,11 @@ class UsuarioLogado {
   final String nome;
   final String papel;
 
-  const UsuarioLogado({required this.id, required this.login, required this.nome, required this.papel});
+  const UsuarioLogado(
+      {required this.id,
+      required this.login,
+      required this.nome,
+      required this.papel});
 
   factory UsuarioLogado.fromJson(Map<String, dynamic> j) => UsuarioLogado(
         id: j['id'] as String,
@@ -19,12 +23,16 @@ class UsuarioLogado {
         papel: j['papel'] as String,
       );
 
-  Map<String, dynamic> toJson() => {'id': id, 'login': login, 'nome': nome, 'papel': papel};
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'login': login, 'nome': nome, 'papel': papel};
 
   /// Quem lança e corrige entradas no estoque da fábrica.
   bool get podeLancar => papel == 'admin' || papel == 'fabrica';
 
   bool get podeConsultar => podeLancar || papel == 'leitura';
+
+  /// Cadastra e tira de uso itens e categorias do catálogo.
+  bool get ehAdmin => papel == 'admin';
 }
 
 class LoginResultado {
@@ -32,7 +40,8 @@ class LoginResultado {
   final DateTime expiraEm;
   final UsuarioLogado usuario;
 
-  const LoginResultado({required this.token, required this.expiraEm, required this.usuario});
+  const LoginResultado(
+      {required this.token, required this.expiraEm, required this.usuario});
 
   factory LoginResultado.fromJson(Map<String, dynamic> j) => LoginResultado(
         token: j['token'] as String,
@@ -49,7 +58,11 @@ class LocalEstoque {
   final String tipo;
   final String? temperatura;
 
-  const LocalEstoque({required this.id, required this.nome, required this.tipo, this.temperatura});
+  const LocalEstoque(
+      {required this.id,
+      required this.nome,
+      required this.tipo,
+      this.temperatura});
 
   factory LocalEstoque.fromJson(Map<String, dynamic> j) => LocalEstoque(
         id: j['id'] as String,
@@ -58,7 +71,8 @@ class LocalEstoque {
         temperatura: j['temperatura'] as String?,
       );
 
-  Map<String, dynamic> toJson() => {'id': id, 'nome': nome, 'tipo': tipo, 'temperatura': temperatura};
+  Map<String, dynamic> toJson() =>
+      {'id': id, 'nome': nome, 'tipo': tipo, 'temperatura': temperatura};
 }
 
 class Categoria {
@@ -67,7 +81,8 @@ class Categoria {
 
   const Categoria({required this.id, required this.nome});
 
-  factory Categoria.fromJson(Map<String, dynamic> j) => Categoria(id: j['id'] as String, nome: j['nome'] as String);
+  factory Categoria.fromJson(Map<String, dynamic> j) =>
+      Categoria(id: j['id'] as String, nome: j['nome'] as String);
 
   Map<String, dynamic> toJson() => {'id': id, 'nome': nome};
 }
@@ -79,8 +94,8 @@ class Embalagem {
 
   const Embalagem({required this.embalagem, required this.qtdBase});
 
-  factory Embalagem.fromJson(Map<String, dynamic> j) =>
-      Embalagem(embalagem: j['embalagem'] as String, qtdBase: _numero(j['qtdBase']));
+  factory Embalagem.fromJson(Map<String, dynamic> j) => Embalagem(
+      embalagem: j['embalagem'] as String, qtdBase: _numero(j['qtdBase']));
 
   Map<String, dynamic> toJson() => {'embalagem': embalagem, 'qtdBase': qtdBase};
 }
@@ -91,7 +106,8 @@ class Variacao {
 
   const Variacao({required this.id, required this.rotulo});
 
-  factory Variacao.fromJson(Map<String, dynamic> j) => Variacao(id: j['id'] as String, rotulo: j['rotulo'] as String);
+  factory Variacao.fromJson(Map<String, dynamic> j) =>
+      Variacao(id: j['id'] as String, rotulo: j['rotulo'] as String);
 
   Map<String, dynamic> toJson() => {'id': id, 'rotulo': rotulo};
 }
@@ -160,10 +176,12 @@ class ItemCatalogo {
         controlaValidade: (j['controlaValidade'] as bool?) ?? false,
         controlaRecipiente: (j['controlaRecipiente'] as bool?) ?? false,
         localPadraoId: j['localPadraoId'] as String?,
-        embalagens:
-            ((j['embalagens'] as List?) ?? const []).map((e) => Embalagem.fromJson(e as Map<String, dynamic>)).toList(),
-        variacoes:
-            ((j['variacoes'] as List?) ?? const []).map((e) => Variacao.fromJson(e as Map<String, dynamic>)).toList(),
+        embalagens: ((j['embalagens'] as List?) ?? const [])
+            .map((e) => Embalagem.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        variacoes: ((j['variacoes'] as List?) ?? const [])
+            .map((e) => Variacao.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -190,7 +208,10 @@ class ItemCatalogo {
   /// Origem sugerida na entrada: o que a fábrica produz entra como produção, o resto como compra.
   String get origemSugerida => nivel == 'producao' ? 'producao' : 'compra';
 
-  String get grupoVisual => [subgrupo, tamanho].whereType<String>().where((v) => v.trim().isNotEmpty).join(' · ');
+  String get grupoVisual => [subgrupo, tamanho]
+      .whereType<String>()
+      .where((v) => v.trim().isNotEmpty)
+      .join(' · ');
 
   /// Unidades que a API aceita para este item: a base, kg ou L (convertidos), e as embalagens
   /// cadastradas. Balde, cuba e pote só pesam: g e kg.
@@ -211,9 +232,11 @@ class ResultadoOperacao {
   final String? etiqueta;
   final double? qtdBase;
 
-  const ResultadoOperacao({required this.id, required this.status, this.etiqueta, this.qtdBase});
+  const ResultadoOperacao(
+      {required this.id, required this.status, this.etiqueta, this.qtdBase});
 
-  factory ResultadoOperacao.fromJson(Map<String, dynamic> j) => ResultadoOperacao(
+  factory ResultadoOperacao.fromJson(Map<String, dynamic> j) =>
+      ResultadoOperacao(
         id: j['id'] as String,
         status: j['status'] as String,
         etiqueta: j['etiqueta'] as String?,
@@ -227,7 +250,11 @@ class OperacaoCriada {
   final String lotePrincipal;
   final List<ResultadoOperacao> resultados;
 
-  const OperacaoCriada({required this.id, required this.codigo, required this.lotePrincipal, required this.resultados});
+  const OperacaoCriada(
+      {required this.id,
+      required this.codigo,
+      required this.lotePrincipal,
+      required this.resultados});
 
   factory OperacaoCriada.fromJson(Map<String, dynamic> j) => OperacaoCriada(
         id: j['id'] as String,
@@ -244,12 +271,19 @@ class Catalogo {
   final List<Categoria> categorias;
   final List<ItemCatalogo> itens;
 
-  const Catalogo({required this.locais, required this.categorias, required this.itens});
+  const Catalogo(
+      {required this.locais, required this.categorias, required this.itens});
 
   factory Catalogo.fromJson(Map<String, dynamic> j) => Catalogo(
-        locais: (j['locais'] as List).map((e) => LocalEstoque.fromJson(e as Map<String, dynamic>)).toList(),
-        categorias: (j['categorias'] as List).map((e) => Categoria.fromJson(e as Map<String, dynamic>)).toList(),
-        itens: (j['itens'] as List).map((e) => ItemCatalogo.fromJson(e as Map<String, dynamic>)).toList(),
+        locais: (j['locais'] as List)
+            .map((e) => LocalEstoque.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        categorias: (j['categorias'] as List)
+            .map((e) => Categoria.fromJson(e as Map<String, dynamic>))
+            .toList(),
+        itens: (j['itens'] as List)
+            .map((e) => ItemCatalogo.fromJson(e as Map<String, dynamic>))
+            .toList(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -284,7 +318,12 @@ class ResultadoEntrada {
   final double? qtdBase;
   final String? erro;
 
-  const ResultadoEntrada({required this.id, required this.status, this.etiqueta, this.qtdBase, this.erro});
+  const ResultadoEntrada(
+      {required this.id,
+      required this.status,
+      this.etiqueta,
+      this.qtdBase,
+      this.erro});
 
   factory ResultadoEntrada.fromJson(Map<String, dynamic> j) => ResultadoEntrada(
         id: j['id'] as String,
@@ -303,7 +342,9 @@ class Movimento {
   final DateTime ocorridoEm;
   final String itemId;
   final String item;
+  final String localId;
   final String local;
+  final String? varianteId;
   final String? variante;
   final double quantidade;
   final String unidade;
@@ -311,13 +352,18 @@ class Movimento {
   final int? unidades;
   final String? origem;
   final String? lote;
+  final DateTime? validade;
   final String? etiqueta;
   final String? documento;
   final String? usuario;
+  final String? responsavel;
+  final String? registradoPor;
+  final String? operationId;
   final String? estornaId;
   final bool estornado;
   final String? motivo;
   final String? autorizadoPor;
+  final String? recipienteId;
 
   /// Como o lançamento foi digitado na origem (planilha) e por que merece conferência. Só vêm
   /// preenchidos em dados importados com ressalva.
@@ -330,21 +376,28 @@ class Movimento {
     required this.ocorridoEm,
     required this.itemId,
     required this.item,
+    required this.localId,
     required this.local,
     required this.quantidade,
     required this.unidade,
     required this.qtdBase,
+    this.varianteId,
     this.variante,
     this.unidades,
     this.origem,
     this.lote,
+    this.validade,
     this.etiqueta,
     this.documento,
     this.usuario,
+    this.responsavel,
+    this.registradoPor,
+    this.operationId,
     this.estornaId,
     this.estornado = false,
     this.motivo,
     this.autorizadoPor,
+    this.recipienteId,
     this.textoOriginal,
     this.revisar,
   });
@@ -355,7 +408,9 @@ class Movimento {
         ocorridoEm: _data(j['ocorridoEm']),
         itemId: j['itemId'] as String,
         item: j['item'] as String,
+        localId: j['localId'] as String,
         local: j['local'] as String,
+        varianteId: j['varianteId'] as String?,
         variante: j['variante'] as String?,
         quantidade: _numero(j['quantidade']),
         unidade: j['unidade'] as String,
@@ -363,13 +418,20 @@ class Movimento {
         unidades: (j['unidades'] as num?)?.toInt(),
         origem: j['origem'] as String?,
         lote: j['lote'] as String?,
+        validade: j['validade'] == null
+            ? null
+            : DateTime.parse(j['validade'] as String),
         etiqueta: j['etiqueta'] as String?,
         documento: j['documento'] as String?,
         usuario: j['usuario'] as String?,
+        responsavel: j['responsavel'] as String?,
+        registradoPor: j['registradoPor'] as String?,
+        operationId: j['operationId'] as String?,
         estornaId: j['estornaId'] as String?,
         estornado: (j['estornado'] as bool?) ?? false,
         motivo: j['motivo'] as String?,
         autorizadoPor: j['autorizadoPor'] as String?,
+        recipienteId: j['recipienteId'] as String?,
         textoOriginal: j['textoOriginal'] as String?,
         revisar: j['revisar'] as String?,
       );
@@ -421,8 +483,11 @@ class Saldo {
   bool get temDuvida => duvida != null && duvida!.trim().isNotEmpty;
 
   /// Cada motivo da dúvida em uma linha, para mostrar em lista.
-  List<String> get motivosDaDuvida =>
-      (duvida ?? '').split(';').map((m) => m.trim()).where((m) => m.isNotEmpty).toList();
+  List<String> get motivosDaDuvida => (duvida ?? '')
+      .split(';')
+      .map((m) => m.trim())
+      .where((m) => m.isNotEmpty)
+      .toList();
 }
 
 /// Um balde, cuba ou pote em estoque, com o peso real dele.
@@ -454,7 +519,98 @@ class Recipiente {
         item: j['item'] as String,
         pesoBase: _numero(j['pesoBase']),
         lote: j['lote'] as String?,
-        validade: j['validade'] == null ? null : DateTime.parse(j['validade'] as String),
+        validade: j['validade'] == null
+            ? null
+            : DateTime.parse(j['validade'] as String),
         produzidoEm: _data(j['produzidoEm']),
+      );
+}
+
+class OperacaoDetalhe {
+  final String id;
+  final String codigo;
+  final String tipo;
+  final String status;
+  final String local;
+  final String? responsavel;
+  final String? registradoPor;
+  final String? lotePrincipal;
+  final DateTime iniciadaEm;
+  final DateTime concluidaEm;
+  final String? observacao;
+  final List<Movimento> movimentos;
+
+  const OperacaoDetalhe({
+    required this.id,
+    required this.codigo,
+    required this.tipo,
+    required this.status,
+    required this.local,
+    required this.iniciadaEm,
+    required this.concluidaEm,
+    required this.movimentos,
+    this.responsavel,
+    this.registradoPor,
+    this.lotePrincipal,
+    this.observacao,
+  });
+
+  factory OperacaoDetalhe.fromJson(Map<String, dynamic> j) => OperacaoDetalhe(
+        id: j['id'] as String,
+        codigo: j['codigo'] as String,
+        tipo: j['tipo'] as String,
+        status: j['status'] as String,
+        local: j['local'] as String,
+        responsavel: j['responsavel'] as String?,
+        registradoPor: j['registradoPor'] as String?,
+        lotePrincipal: j['lotePrincipal'] as String?,
+        iniciadaEm: _data(j['iniciadaEm']),
+        concluidaEm: _data(j['concluidaEm']),
+        observacao: j['observacao'] as String?,
+        movimentos: ((j['movimentos'] as List?) ?? const [])
+            .map((e) => Movimento.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+}
+
+class LoteOrigem {
+  final String loteProduto;
+  final String produtoId;
+  final String produto;
+  final String localId;
+  final String local;
+  final String operationId;
+  final String? loteInsumo;
+  final String insumoId;
+  final String insumo;
+  final double qtdConsumidaBase;
+  final String unidade;
+
+  const LoteOrigem({
+    required this.loteProduto,
+    required this.produtoId,
+    required this.produto,
+    required this.localId,
+    required this.local,
+    required this.operationId,
+    required this.insumoId,
+    required this.insumo,
+    required this.qtdConsumidaBase,
+    required this.unidade,
+    this.loteInsumo,
+  });
+
+  factory LoteOrigem.fromJson(Map<String, dynamic> j) => LoteOrigem(
+        loteProduto: j['loteProduto'] as String,
+        produtoId: j['produtoId'] as String,
+        produto: j['produto'] as String,
+        localId: j['localId'] as String,
+        local: j['local'] as String,
+        operationId: j['operationId'] as String,
+        loteInsumo: j['loteInsumo'] as String?,
+        insumoId: j['insumoId'] as String,
+        insumo: j['insumo'] as String,
+        qtdConsumidaBase: _numero(j['qtdConsumidaBase']),
+        unidade: j['unidade'] as String,
       );
 }

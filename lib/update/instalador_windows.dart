@@ -9,10 +9,13 @@ import 'download.dart';
 /// substitui os arquivos e reabre o app, como no orama_admin.
 class InstaladorWindows implements InstaladorDeApk {
   @override
-  Future<void> baixarEInstalar(String url, {void Function(double progresso)? aoProgredir}) async {
+  Future<void> baixarEInstalar(String url,
+      {void Function(double progresso)? aoProgredir}) async {
     final pasta = await getTemporaryDirectory();
-    final arquivo = File('${pasta.path}${Platform.pathSeparator}orama_fabrica_setup.exe');
+    final arquivo =
+        File('${pasta.path}${Platform.pathSeparator}orama_fabrica_setup.exe');
     await baixarArquivo(url, arquivo, aoProgredir: aoProgredir);
-    await Process.start(arquivo.path, const [], mode: ProcessStartMode.detached);
+    await Process.start(arquivo.path, const [],
+        mode: ProcessStartMode.detached);
   }
 }

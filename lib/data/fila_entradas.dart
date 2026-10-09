@@ -22,7 +22,11 @@ class ResultadoSync {
   /// Já havia um envio em andamento.
   final bool ocupado;
 
-  const ResultadoSync({this.enviadas = 0, this.recusadas = 0, this.indisponivel = false, this.ocupado = false});
+  const ResultadoSync(
+      {this.enviadas = 0,
+      this.recusadas = 0,
+      this.indisponivel = false,
+      this.ocupado = false});
 }
 
 /// Entradas lançadas e ainda não confirmadas pela API. Ficam no aparelho até serem aceitas, então
@@ -46,10 +50,12 @@ class FilaEntradas extends ChangeNotifier {
       _itens.where((e) => e.usuarioId == usuarioId).toList(growable: false);
 
   /// Aguardando envio (sem erro).
-  int aguardando(String usuarioId) => _itens.where((e) => e.usuarioId == usuarioId && e.erro == null).length;
+  int aguardando(String usuarioId) =>
+      _itens.where((e) => e.usuarioId == usuarioId && e.erro == null).length;
 
   /// Recusadas pela API: precisam de uma decisão do usuário (descartar ou tentar de novo).
-  int recusadas(String usuarioId) => _itens.where((e) => e.usuarioId == usuarioId && e.erro != null).length;
+  int recusadas(String usuarioId) =>
+      _itens.where((e) => e.usuarioId == usuarioId && e.erro != null).length;
 
   void _carregar() {
     final texto = _store.ler(chave);
@@ -64,7 +70,8 @@ class FilaEntradas extends ChangeNotifier {
     }
   }
 
-  Future<void> _salvar() => _store.gravar(chave, jsonEncode(_itens.map((e) => e.toJson()).toList()));
+  Future<void> _salvar() =>
+      _store.gravar(chave, jsonEncode(_itens.map((e) => e.toJson()).toList()));
 
   Future<void> adicionar(List<EntradaPendente> novas) async {
     _itens.addAll(novas);
@@ -98,12 +105,16 @@ class FilaEntradas extends ChangeNotifier {
     var recusadas = 0;
     var indisponivel = false;
     try {
-      final pendentes = _itens.where((e) => e.usuarioId == usuarioId && e.erro == null).toList();
+      final pendentes = _itens
+          .where((e) => e.usuarioId == usuarioId && e.erro == null)
+          .toList();
       for (var i = 0; i < pendentes.length; i += tamanhoLote) {
-        final lote = pendentes.sublist(i, min(i + tamanhoLote, pendentes.length));
+        final lote =
+            pendentes.sublist(i, min(i + tamanhoLote, pendentes.length));
         final List<ResultadoEntrada> resultados;
         try {
-          resultados = await _api.enviarEntradas(lote.map((e) => e.paraApi()).toList());
+          resultados =
+              await _api.enviarEntradas(lote.map((e) => e.paraApi()).toList());
         } on SemConexaoException {
           indisponivel = true;
           break;
@@ -142,7 +153,8 @@ class FilaEntradas extends ChangeNotifier {
       _enviando = false;
       notifyListeners();
     }
-    return ResultadoSync(enviadas: enviadas, recusadas: recusadas, indisponivel: indisponivel);
+    return ResultadoSync(
+        enviadas: enviadas, recusadas: recusadas, indisponivel: indisponivel);
   }
 
   void _trocar(EntradaPendente nova) {

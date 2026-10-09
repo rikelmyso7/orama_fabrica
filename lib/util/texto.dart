@@ -15,5 +15,6 @@ class Texto {
     return b.toString().toLowerCase().trim();
   }
 
-  static bool contem(String texto, String busca) => normalizar(texto).contains(normalizar(busca));
+  static bool contem(String texto, String busca) =>
+      normalizar(texto).contains(normalizar(busca));
 }

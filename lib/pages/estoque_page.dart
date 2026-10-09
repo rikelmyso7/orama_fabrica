@@ -71,7 +71,8 @@ class _EstoquePageState extends State<EstoquePage> {
     final visiveis = _saldos
         .where((s) => s.saldoBase != 0 || s.saldoUnidades != 0 || s.temDuvida)
         .where((s) => !_soComAlerta || s.temDuvida)
-        .where((s) => _busca.text.trim().isEmpty || Texto.contem(s.item, _busca.text))
+        .where((s) =>
+            _busca.text.trim().isEmpty || Texto.contem(s.item, _busca.text))
         .toList();
     final porLocal = <String, List<Saldo>>{};
     for (final s in visiveis) {
@@ -99,7 +100,8 @@ class _EstoquePageState extends State<EstoquePage> {
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
               child: FilterChip(
-                avatar: Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800, size: 18),
+                avatar: Icon(Icons.warning_amber_rounded,
+                    color: Colors.amber.shade800, size: 18),
                 label: Text('Só com alerta ($comAlerta)'),
                 selected: _soComAlerta,
                 onSelected: (v) => setState(() => _soComAlerta = v),
@@ -131,7 +133,9 @@ class _EstoquePageState extends State<EstoquePage> {
                       for (final s in entrada.value)
                         _SaldoTile(
                           saldo: s,
-                          controlaRecipiente: catalogo?.item(s.itemId)?.controlaRecipiente ?? false,
+                          controlaRecipiente:
+                              catalogo?.item(s.itemId)?.controlaRecipiente ??
+                                  false,
                         ),
                     ],
                   ),
@@ -157,8 +161,10 @@ class _SaldoTile extends StatelessWidget {
     final quantidade = Numero.formatarBase(s.saldoBase, s.unidadeBase);
     return ListTile(
       title: Text(s.variante == null ? s.item : '${s.item} · ${s.variante}'),
-      subtitle:
-          controlaRecipiente ? Text('${s.saldoUnidades} ${s.saldoUnidades == 1 ? 'recipiente' : 'recipientes'}') : null,
+      subtitle: controlaRecipiente
+          ? Text(
+              '${s.saldoUnidades} ${s.saldoUnidades == 1 ? 'recipiente' : 'recipientes'}')
+          : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -169,7 +175,9 @@ class _SaldoTile extends StatelessWidget {
             ),
           Text(
             quantidade,
-            style: TextStyle(fontWeight: FontWeight.w600, color: negativo ? Colors.red : null),
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: negativo ? Colors.red : null),
           ),
         ],
       ),
@@ -179,7 +187,8 @@ class _SaldoTile extends StatelessWidget {
                 isScrollControlled: true,
                 useSafeArea: true,
                 showDragHandle: true,
-                builder: (_) => _RecipientesSheet(itemId: s.itemId, titulo: s.item),
+                builder: (_) =>
+                    _RecipientesSheet(itemId: s.itemId, titulo: s.item),
               )
           : null,
     );
@@ -197,7 +206,8 @@ class _RecipientesSheet extends StatefulWidget {
 }
 
 class _RecipientesSheetState extends State<_RecipientesSheet> {
-  late final Future<List<Recipiente>> _futuro = context.read<OramaApi>().recipientes(widget.itemId);
+  late final Future<List<Recipiente>> _futuro =
+      context.read<OramaApi>().recipientes(widget.itemId);
 
   @override
   Widget build(BuildContext context) {
@@ -207,12 +217,16 @@ class _RecipientesSheetState extends State<_RecipientesSheet> {
       builder: (context, snapshot) {
         final Widget corpo;
         if (snapshot.connectionState != ConnectionState.done) {
-          corpo = const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator()));
+          corpo = const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(child: CircularProgressIndicator()));
         } else if (snapshot.hasError) {
           final erro = snapshot.error;
           corpo = Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(erro is ApiException ? erro.mensagem : 'Não foi possível carregar os recipientes.'),
+            child: Text(erro is ApiException
+                ? erro.mensagem
+                : 'Não foi possível carregar os recipientes.'),
           );
         } else {
           final lista = snapshot.data!;
@@ -221,15 +235,19 @@ class _RecipientesSheetState extends State<_RecipientesSheet> {
             children: [
               for (final r in lista)
                 ListTile(
-                  title: Text('${r.etiqueta} · ${Numero.formatarBase(r.pesoBase, 'g')}'),
+                  title: Text(
+                      '${r.etiqueta} · ${Numero.formatarBase(r.pesoBase, 'g')}'),
                   subtitle: Text([
                     if (r.lote != null) 'Lote ${r.lote}',
                     'produzido em ${dia.format(r.produzidoEm)}',
-                    if (r.validade != null) 'validade ${dia.format(r.validade!)}',
+                    if (r.validade != null)
+                      'validade ${dia.format(r.validade!)}',
                   ].join(' · ')),
                 ),
               if (lista.isEmpty)
-                const Padding(padding: EdgeInsets.all(24), child: Text('Nenhum recipiente em estoque.')),
+                const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('Nenhum recipiente em estoque.')),
             ],
           );
         }
@@ -241,7 +259,8 @@ class _RecipientesSheetState extends State<_RecipientesSheet> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: Text('${widget.titulo}: em ordem de saída (menor validade primeiro)',
+                  child: Text(
+                      '${widget.titulo}: em ordem de saída (menor validade primeiro)',
                       style: Theme.of(context).textTheme.titleSmall),
                 ),
                 corpo,

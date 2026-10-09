@@ -44,14 +44,16 @@ class _EstornoDialogState extends State<EstornoDialog> {
             children: [
               Text(widget.descricao),
               const SizedBox(height: 4),
-              const Text('O lançamento não é apagado: um estorno é registrado no lugar.',
+              const Text(
+                  'O lançamento não é apagado: um estorno é registrado no lugar.',
                   style: TextStyle(fontSize: 12)),
               const SizedBox(height: 12),
               TextFormField(
                 controller: _motivo,
                 maxLength: 300,
                 decoration: const InputDecoration(labelText: 'Motivo'),
-                validator: (v) => (v == null || v.trim().isEmpty) ? 'Informe o motivo' : null,
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Informe o motivo' : null,
               ),
               TextFormField(
                 controller: _senha,
@@ -60,22 +62,27 @@ class _EstornoDialogState extends State<EstornoDialog> {
                   labelText: 'Senha de administrador',
                   suffixIcon: IconButton(
                     tooltip: _ocultar ? 'Mostrar senha' : 'Esconder senha',
-                    icon: Icon(_ocultar ? Icons.visibility_off : Icons.visibility),
+                    icon: Icon(
+                        _ocultar ? Icons.visibility_off : Icons.visibility),
                     onPressed: () => setState(() => _ocultar = !_ocultar),
                   ),
                 ),
-                validator: (v) => (v == null || v.isEmpty) ? 'Informe a senha' : null,
+                validator: (v) =>
+                    (v == null || v.isEmpty) ? 'Informe a senha' : null,
               ),
             ],
           ),
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancelar')),
+        TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar')),
         FilledButton(
           onPressed: () {
             if (_form.currentState!.validate()) {
-              Navigator.pop(context, EstornoDados(_motivo.text.trim(), _senha.text));
+              Navigator.pop(
+                  context, EstornoDados(_motivo.text.trim(), _senha.text));
             }
           },
           child: const Text('Estornar'),

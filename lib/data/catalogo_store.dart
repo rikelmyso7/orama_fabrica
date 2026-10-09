@@ -10,7 +10,8 @@ import '../util/texto.dart';
 
 /// Catálogo de itens, com cache no aparelho: a tela de entrada abre mesmo sem internet.
 class CatalogoStore extends ChangeNotifier {
-  CatalogoStore(this._api, this._store, {DateTime Function()? agora}) : _agora = agora ?? DateTime.now {
+  CatalogoStore(this._api, this._store, {DateTime Function()? agora})
+      : _agora = agora ?? DateTime.now {
     _carregarCache();
   }
 
@@ -29,7 +30,9 @@ class CatalogoStore extends ChangeNotifier {
   String? aviso;
 
   bool get precisaAtualizar =>
-      catalogo == null || atualizadoEm == null || _agora().difference(atualizadoEm!) > validadeDoCache;
+      catalogo == null ||
+      atualizadoEm == null ||
+      _agora().difference(atualizadoEm!) > validadeDoCache;
 
   void _carregarCache() {
     final texto = _store.ler(chave);
@@ -55,7 +58,10 @@ class CatalogoStore extends ChangeNotifier {
       aviso = null;
       await _store.gravar(
         chave,
-        jsonEncode({'atualizadoEm': atualizadoEm!.toUtc().toIso8601String(), 'catalogo': novo.toJson()}),
+        jsonEncode({
+          'atualizadoEm': atualizadoEm!.toUtc().toIso8601String(),
+          'catalogo': novo.toJson()
+        }),
       );
     } on SemConexaoException {
       aviso = catalogo == null
@@ -81,8 +87,11 @@ class CatalogoStore extends ChangeNotifier {
           (i.tamanho != null && Texto.contem(i.tamanho!, busca));
     }).toList()
       ..sort((a, b) {
-        final grupo = Texto.normalizar(a.grupoVisual).compareTo(Texto.normalizar(b.grupoVisual));
-        return grupo == 0 ? Texto.normalizar(a.nome).compareTo(Texto.normalizar(b.nome)) : grupo;
+        final grupo = Texto.normalizar(a.grupoVisual)
+            .compareTo(Texto.normalizar(b.grupoVisual));
+        return grupo == 0
+            ? Texto.normalizar(a.nome).compareTo(Texto.normalizar(b.nome))
+            : grupo;
       });
     return filtrados;
   }
