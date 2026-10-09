@@ -30,9 +30,11 @@ Future<void> main() async {
 /// Atualização pelos releases do GitHub: APK no Android, .exe (instalador) no Windows. Nas demais plataformas, desligada.
 ServicoAtualizacao? _servicoDeAtualizacao() {
   if (kIsWeb) return null;
-  Future<String> versaoInstalada() async => (await PackageInfo.fromPlatform()).version;
+  Future<String> versaoInstalada() async =>
+      (await PackageInfo.fromPlatform()).version;
   if (Platform.isAndroid) {
-    return ServicoAtualizacao(versaoInstalada: versaoInstalada, instalador: InstaladorAndroid());
+    return ServicoAtualizacao(
+        versaoInstalada: versaoInstalada, instalador: InstaladorAndroid());
   }
   if (Platform.isWindows) {
     return ServicoAtualizacao(

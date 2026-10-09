@@ -24,14 +24,18 @@ class AlertaDuvida extends StatelessWidget {
       icon: Icon(Icons.warning_amber_rounded, color: Colors.amber.shade800),
       onPressed: () => showDialog<void>(
         context: context,
-        builder: (_) => _ExplicacaoDaDuvida(titulo: titulo, motivos: motivos, textoOriginal: textoOriginal),
+        builder: (_) => _ExplicacaoDaDuvida(
+            titulo: titulo, motivos: motivos, textoOriginal: textoOriginal),
       ),
     );
   }
 }
 
 class _ExplicacaoDaDuvida extends StatelessWidget {
-  const _ExplicacaoDaDuvida({required this.titulo, required this.motivos, required this.textoOriginal});
+  const _ExplicacaoDaDuvida(
+      {required this.titulo,
+      required this.motivos,
+      required this.textoOriginal});
 
   final String titulo;
   final List<String> motivos;
@@ -71,7 +75,9 @@ class _ExplicacaoDaDuvida extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('Fechar')),
+        TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Fechar')),
       ],
     );
   }

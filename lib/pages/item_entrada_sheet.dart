@@ -5,7 +5,11 @@ import '../api/models.dart';
 import '../data/rascunho_entrada.dart';
 import '../util/numero.dart';
 
-const _origens = {'producao': 'Produção', 'compra': 'Compra', 'devolucao': 'Devolução'};
+const _origens = {
+  'producao': 'Produção',
+  'compra': 'Compra',
+  'devolucao': 'Devolução'
+};
 
 /// Faixa de peso esperada para um balde, cuba ou pote, em gramas. Fora dela o app pede confirmação:
 /// o erro típico é a unidade (digitar 4100 kg querendo dizer 4100 g).
@@ -22,6 +26,7 @@ Future<void> mostrarItemEntrada({
   required ItemCatalogo item,
   required RascunhoEntrada rascunho,
   String? localNome,
+  String? localId,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -30,7 +35,11 @@ Future<void> mostrarItemEntrada({
     showDragHandle: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: ItemEntradaSheet(item: item, rascunho: rascunho, localNome: localNome),
+      child: ItemEntradaSheet(
+          item: item,
+          rascunho: rascunho,
+          localNome: localNome,
+          localId: localId),
     ),
   );
 }
@@ -38,11 +47,17 @@ Future<void> mostrarItemEntrada({
 /// Formulário de um item. Item comum: quantidade e unidade. Balde, cuba e pote: lote, dia e uma
 /// lista de pesos, um por recipiente (cada um vira uma linha, com o mesmo lote e dia).
 class ItemEntradaSheet extends StatefulWidget {
-  const ItemEntradaSheet({super.key, required this.item, required this.rascunho, this.localNome});
+  const ItemEntradaSheet(
+      {super.key,
+      required this.item,
+      required this.rascunho,
+      this.localNome,
+      this.localId});
 
   final ItemCatalogo item;
   final RascunhoEntrada rascunho;
   final String? localNome;
+  final String? localId;
 
   @override
   State<ItemEntradaSheet> createState() => _ItemEntradaSheetState();
@@ -56,7 +71,9 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
   final _pesos = <PesoDigitado>[];
 
   late String _origem = widget.item.origemSugerida;
-  late String _unidade = widget.item.controlaRecipiente ? 'g' : widget.item.unidadesPermitidas.first;
+  late String _unidade = widget.item.controlaRecipiente
+      ? 'g'
+      : widget.item.unidadesPermitidas.first;
   late DateTime _dia = _hoje();
   Variacao? _variacao;
   DateTime? _validade;
@@ -78,8 +95,15 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
     super.dispose();
   }
 
-  Future<DateTime?> _escolherData({required DateTime inicial, required DateTime primeira, required DateTime ultima}) {
-    return showDatePicker(context: context, initialDate: inicial, firstDate: primeira, lastDate: ultima);
+  Future<DateTime?> _escolherData(
+      {required DateTime inicial,
+      required DateTime primeira,
+      required DateTime ultima}) {
+    return showDatePicker(
+        context: context,
+        initialDate: inicial,
+        firstDate: primeira,
+        lastDate: ultima);
   }
 
   Future<void> _escolherDia() async {
@@ -114,11 +138,16 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Peso fora do esperado'),
-          content: Text('${Numero.formatar(p.valor, p.unidade)} é muito diferente do normal para um recipiente. '
+          content: Text(
+              '${Numero.formatar(p.valor, p.unidade)} é muito diferente do normal para um recipiente. '
               'Confira a unidade (g ou kg).'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Corrigir')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Está certo')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Corrigir')),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Está certo')),
           ],
         ),
       );
@@ -150,6 +179,7 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
       origem: _origem,
       variacao: _variacao,
       localNome: widget.localNome,
+      localId: widget.localId,
       lote: _lote.text.trim().isEmpty ? null : _lote.text.trim(),
       validade: _validade,
       documento: _origem == 'compra' ? _documento.text : null,
@@ -179,22 +209,32 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
       origem: _origem,
       variacao: _variacao,
       localNome: widget.localNome,
+      localId: widget.localId,
       validade: _validade,
     );
     Navigator.pop(context);
   }
 
-  Widget _botaoData(String rotulo, DateTime? valor, VoidCallback aoTocar, {VoidCallback? aoLimpar}) {
+  Widget _botaoData(String rotulo, DateTime? valor, VoidCallback aoTocar,
+      {VoidCallback? aoLimpar}) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       title: Text(rotulo),
-      subtitle: Text(valor == null ? 'Não informada' : DateFormat('dd/MM/yyyy').format(valor)),
+      subtitle: Text(valor == null
+          ? 'Não informada'
+          : DateFormat('dd/MM/yyyy').format(valor)),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (aoLimpar != null && valor != null)
-            IconButton(tooltip: 'Limpar', icon: const Icon(Icons.clear), onPressed: aoLimpar),
-          IconButton(tooltip: 'Escolher data', icon: const Icon(Icons.calendar_today), onPressed: aoTocar),
+            IconButton(
+                tooltip: 'Limpar',
+                icon: const Icon(Icons.clear),
+                onPressed: aoLimpar),
+          IconButton(
+              tooltip: 'Escolher data',
+              icon: const Icon(Icons.calendar_today),
+              onPressed: aoTocar),
         ],
       ),
       onTap: aoTocar,
@@ -213,7 +253,10 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
           if (widget.localNome != null) Text('Entra em: ${widget.localNome}'),
           const SizedBox(height: 12),
           SegmentedButton<String>(
-            segments: [for (final e in _origens.entries) ButtonSegment(value: e.key, label: Text(e.value))],
+            segments: [
+              for (final e in _origens.entries)
+                ButtonSegment(value: e.key, label: Text(e.value))
+            ],
             selected: {_origem},
             onSelectionChanged: (s) => setState(() => _origem = s.first),
           ),
@@ -221,8 +264,12 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
             const SizedBox(height: 12),
             DropdownButtonFormField<Variacao>(
               initialValue: _variacao,
-              decoration: const InputDecoration(labelText: 'Variação', border: OutlineInputBorder()),
-              items: [for (final v in _item.variacoes) DropdownMenuItem(value: v, child: Text(v.rotulo))],
+              decoration: const InputDecoration(
+                  labelText: 'Variação', border: OutlineInputBorder()),
+              items: [
+                for (final v in _item.variacoes)
+                  DropdownMenuItem(value: v, child: Text(v.rotulo))
+              ],
               onChanged: (v) => setState(() => _variacao = v),
             ),
           ],
@@ -245,15 +292,20 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
               child: TextField(
                 key: const Key('campo-quantidade'),
                 controller: _quantidade,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(labelText: 'Quantidade', border: OutlineInputBorder()),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                    labelText: 'Quantidade', border: OutlineInputBorder()),
               ),
             ),
             const SizedBox(width: 12),
             DropdownButton<String>(
               key: const Key('campo-unidade'),
               value: _unidade,
-              items: [for (final u in _item.unidadesPermitidas) DropdownMenuItem(value: u, child: Text(u))],
+              items: [
+                for (final u in _item.unidadesPermitidas)
+                  DropdownMenuItem(value: u, child: Text(u))
+              ],
               onChanged: (u) => setState(() => _unidade = u ?? _unidade),
             ),
           ],
@@ -263,21 +315,26 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
           TextField(
             key: const Key('campo-lote'),
             controller: _lote,
-            decoration: const InputDecoration(labelText: 'Lote (opcional)', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+                labelText: 'Lote (opcional)', border: OutlineInputBorder()),
           ),
-          _botaoData('Validade (opcional)', _validade, _escolherValidade, aoLimpar: () => setState(() => _validade = null)),
+          _botaoData('Validade (opcional)', _validade, _escolherValidade,
+              aoLimpar: () => setState(() => _validade = null)),
         ],
         if (_origem == 'compra') ...[
           const SizedBox(height: 12),
           TextField(
             controller: _documento,
-            decoration: const InputDecoration(labelText: 'Nota fiscal (opcional)', border: OutlineInputBorder()),
+            decoration: const InputDecoration(
+                labelText: 'Nota fiscal (opcional)',
+                border: OutlineInputBorder()),
           ),
         ],
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          child: FilledButton(onPressed: _confirmarComum, child: const Text('Adicionar')),
+          child: FilledButton(
+              onPressed: _confirmarComum, child: const Text('Adicionar')),
         ),
       ];
 
@@ -285,13 +342,17 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
         TextField(
           key: const Key('campo-lote'),
           controller: _lote,
-          decoration: const InputDecoration(labelText: 'Lote (o mesmo da etiqueta)', border: OutlineInputBorder()),
+          decoration: const InputDecoration(
+              labelText: 'Lote (o mesmo da etiqueta)',
+              border: OutlineInputBorder()),
         ),
         _botaoData('Dia da produção', _dia, _escolherDia),
         if (_item.controlaValidade)
-          _botaoData('Validade (opcional)', _validade, _escolherValidade, aoLimpar: () => setState(() => _validade = null)),
+          _botaoData('Validade (opcional)', _validade, _escolherValidade,
+              aoLimpar: () => setState(() => _validade = null)),
         const SizedBox(height: 4),
-        Text('Peso de cada recipiente', style: Theme.of(context).textTheme.labelLarge),
+        Text('Peso de cada recipiente',
+            style: Theme.of(context).textTheme.labelLarge),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -299,9 +360,11 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
               child: TextField(
                 key: const Key('campo-peso'),
                 controller: _peso,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
                 onSubmitted: (_) => _adicionarPeso(),
-                decoration: const InputDecoration(labelText: 'Peso', border: OutlineInputBorder()),
+                decoration: const InputDecoration(
+                    labelText: 'Peso', border: OutlineInputBorder()),
               ),
             ),
             const SizedBox(width: 12),
@@ -328,7 +391,8 @@ class _ItemEntradaSheetState extends State<ItemEntradaSheet> {
           children: [
             for (var i = 0; i < _pesos.length; i++)
               InputChip(
-                label: Text(Numero.formatar(_pesos[i].valor, _pesos[i].unidade)),
+                label:
+                    Text(Numero.formatar(_pesos[i].valor, _pesos[i].unidade)),
                 onDeleted: () => setState(() => _pesos.removeAt(i)),
               ),
           ],

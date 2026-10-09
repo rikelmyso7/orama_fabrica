@@ -10,7 +10,8 @@ const _prefixoDoApk = 'https://github.com/$repositorioDoApp/releases/download/';
 /// Uma versão publicada, mais nova que a instalada. [apkUrl] é o pacote da plataforma: `.apk` no
 /// Android, `.exe` (instalador) no Windows.
 class Atualizacao {
-  const Atualizacao({required this.versao, required this.notas, required this.apkUrl});
+  const Atualizacao(
+      {required this.versao, required this.notas, required this.apkUrl});
 
   final String versao;
   final String notas;
@@ -30,7 +31,8 @@ class Atualizacao {
 
 /// Baixa o pacote e entrega ao sistema: instalador do Android ou instalador do Windows.
 abstract class InstaladorDeApk {
-  Future<void> baixarEInstalar(String url, {void Function(double progresso)? aoProgredir});
+  Future<void> baixarEInstalar(String url,
+      {void Function(double progresso)? aoProgredir});
 }
 
 /// `true` se [remota] é maior que [local]. Compara major.minor.patch como números; ignora `v`,
@@ -72,14 +74,15 @@ class ServicoAtualizacao {
   final String extensaoDoPacote;
   final http.Client _client;
 
-  static final _ultimoRelease = Uri.parse('https://api.github.com/repos/$repositorioDoApp/releases/latest');
+  static final _ultimoRelease = Uri.parse(
+      'https://api.github.com/repos/$repositorioDoApp/releases/latest');
 
   Future<Atualizacao?> verificar() async {
     try {
       final instalada = await versaoInstalada();
-      final resposta = await _client
-          .get(_ultimoRelease, headers: {'Accept': 'application/vnd.github+json'})
-          .timeout(const Duration(seconds: 10));
+      final resposta = await _client.get(_ultimoRelease, headers: {
+        'Accept': 'application/vnd.github+json'
+      }).timeout(const Duration(seconds: 10));
       if (resposta.statusCode != 200) return null;
 
       final dados = jsonDecode(utf8.decode(resposta.bodyBytes));
@@ -91,13 +94,17 @@ class ServicoAtualizacao {
       final apkUrl = _urlDoPacote(dados['assets']);
       if (apkUrl == null) return null;
 
-      return Atualizacao(versao: versao, notas: (dados['body'] as String? ?? '').trim(), apkUrl: apkUrl);
+      return Atualizacao(
+          versao: versao,
+          notas: (dados['body'] as String? ?? '').trim(),
+          apkUrl: apkUrl);
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> instalar(Atualizacao a, {void Function(double progresso)? aoProgredir}) =>
+  Future<void> instalar(Atualizacao a,
+          {void Function(double progresso)? aoProgredir}) =>
       instalador.baixarEInstalar(a.apkUrl, aoProgredir: aoProgredir);
 
   /// Só aceita pacote hospedado nos releases do próprio repositório, por HTTPS.
@@ -107,7 +114,10 @@ class ServicoAtualizacao {
       if (asset is! Map) continue;
       final nome = asset['name'];
       final url = asset['browser_download_url'];
-      if (nome is String && nome.endsWith(extensaoDoPacote) && url is String && url.startsWith(_prefixoDoApk)) {
+      if (nome is String &&
+          nome.endsWith(extensaoDoPacote) &&
+          url is String &&
+          url.startsWith(_prefixoDoApk)) {
         return url;
       }
     }

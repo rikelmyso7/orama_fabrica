@@ -5,7 +5,10 @@ import 'package:orama_fabrica2/widgets/alerta_duvida.dart';
 import '../support/app_de_teste.dart';
 
 Map<String, Object?> saldoJson(String item, String itemId, num saldoBase,
-        {String unidadeBase = 'g', int unidades = 0, String local = 'Câmara frigorífica', String? duvida}) =>
+        {String unidadeBase = 'g',
+        int unidades = 0,
+        String local = 'Câmara frigorífica',
+        String? duvida}) =>
     {
       'localId': 'loc-camara',
       'local': local,
@@ -25,7 +28,9 @@ Future<void> irParaEstoque(WidgetTester tester) async {
 void main() {
   setUpAll(prepararDatas);
 
-  testWidgets('mostra o saldo por local, em kg quando passa de 1000 g, e esconde saldo zero', (tester) async {
+  testWidgets(
+      'mostra o saldo por local, em kg quando passa de 1000 g, e esconde saldo zero',
+      (tester) async {
     await abrirApp(tester, configurar: (s) {
       s.responder('GET', '/saldo', [
         saldoJson('COCADA', 'it-balde', 7950, unidades: 2),
@@ -47,7 +52,9 @@ void main() {
   });
 
   testWidgets('saldo negativo aparece em vermelho', (tester) async {
-    await abrirApp(tester, configurar: (s) => s.responder('GET', '/saldo', [saldoJson('COCADA', 'it-balde', -250)]));
+    await abrirApp(tester,
+        configurar: (s) => s.responder(
+            'GET', '/saldo', [saldoJson('COCADA', 'it-balde', -250)]));
 
     await irParaEstoque(tester);
 
@@ -57,7 +64,8 @@ void main() {
 
   testWidgets('a busca filtra os itens sem diferenciar acento', (tester) async {
     await abrirApp(tester, configurar: (s) {
-      s.responder('GET', '/saldo', [saldoJson('PAÇOCA', 'a', 10), saldoJson('COCADA', 'it-balde', 20)]);
+      s.responder('GET', '/saldo',
+          [saldoJson('PAÇOCA', 'a', 10), saldoJson('COCADA', 'it-balde', 20)]);
     });
     await irParaEstoque(tester);
 
@@ -68,18 +76,35 @@ void main() {
     expect(find.text('COCADA'), findsNothing);
   });
 
-  testWidgets('tocar em um balde mostra cada recipiente com peso, lote e validade', (tester) async {
+  testWidgets(
+      'tocar em um balde mostra cada recipiente com peso, lote e validade',
+      (tester) async {
     final m = await abrirApp(tester, configurar: (s) {
-      s.responder('GET', '/saldo', [saldoJson('COCADA', 'it-balde', 7950, unidades: 2)]);
+      s.responder('GET', '/saldo',
+          [saldoJson('COCADA', 'it-balde', 7950, unidades: 2)]);
       s.responder('GET', '/recipientes', [
         {
-          'recipienteId': 'r1', 'etiqueta': 'R000002', 'localId': 'loc-camara', 'local': 'Câmara frigorífica',
-          'itemId': 'it-balde', 'item': 'COCADA', 'pesoBase': 3850, 'lote': 'L7', 'validade': '2027-03-01',
+          'recipienteId': 'r1',
+          'etiqueta': 'R000002',
+          'localId': 'loc-camara',
+          'local': 'Câmara frigorífica',
+          'itemId': 'it-balde',
+          'item': 'COCADA',
+          'pesoBase': 3850,
+          'lote': 'L7',
+          'validade': '2027-03-01',
           'produzidoEm': '2026-10-02T12:00:00Z',
         },
         {
-          'recipienteId': 'r2', 'etiqueta': 'R000001', 'localId': 'loc-camara', 'local': 'Câmara frigorífica',
-          'itemId': 'it-balde', 'item': 'COCADA', 'pesoBase': 4100, 'lote': 'L7', 'validade': null,
+          'recipienteId': 'r2',
+          'etiqueta': 'R000001',
+          'localId': 'loc-camara',
+          'local': 'Câmara frigorífica',
+          'itemId': 'it-balde',
+          'item': 'COCADA',
+          'pesoBase': 4100,
+          'lote': 'L7',
+          'validade': null,
           'produzidoEm': '2026-10-02T12:00:00Z',
         },
       ]);
@@ -94,12 +119,15 @@ void main() {
     expect(find.text('R000001 · 4,1 kg'), findsOneWidget);
     expect(find.textContaining('validade 01/03/2027'), findsOneWidget);
     expect(find.textContaining('Lote L7'), findsNWidgets(2));
-    expect(m.servidor.chamadas('GET', '/recipientes').single.uri.queryParameters, {'itemId': 'it-balde'});
+    expect(
+        m.servidor.chamadas('GET', '/recipientes').single.uri.queryParameters,
+        {'itemId': 'it-balde'});
   });
 
   testWidgets('item comum não abre lista de recipientes', (tester) async {
     final m = await abrirApp(tester,
-        configurar: (s) => s.responder('GET', '/saldo', [saldoJson('BROWNIE', 'it-cookie', 12, unidadeBase: 'un')]));
+        configurar: (s) => s.responder('GET', '/saldo',
+            [saldoJson('BROWNIE', 'it-cookie', 12, unidadeBase: 'un')]));
     await irParaEstoque(tester);
 
     await tester.tap(find.text('BROWNIE'));
@@ -108,7 +136,8 @@ void main() {
     expect(m.servidor.chamadas('GET', '/recipientes'), isEmpty);
   });
 
-  testWidgets('sem internet avisa que o saldo não foi carregado', (tester) async {
+  testWidgets('sem internet avisa que o saldo não foi carregado',
+      (tester) async {
     final m = await abrirApp(tester);
     m.servidor.offline = true;
     await irParaEstoque(tester);
@@ -122,31 +151,40 @@ void main() {
   });
 
   group('alertas de dado duvidoso', () {
-    const duvida = 'contagem sem valor (não entra no saldo); soma un + resto - definir';
+    const duvida =
+        'contagem sem valor (não entra no saldo); soma un + resto - definir';
 
-    testWidgets('item com dúvida mostra o alerta, e tocar nele explica cada motivo', (tester) async {
+    testWidgets(
+        'item com dúvida mostra o alerta, e tocar nele explica cada motivo',
+        (tester) async {
       await abrirApp(tester, configurar: (s) {
         s.responder('GET', '/saldo', [
           saldoJson('COCADA', 'it-balde', 7950),
-          saldoJson('POLPA CAJÁ', 'it-caja', 40, unidadeBase: 'un', duvida: duvida),
+          saldoJson('POLPA CAJÁ', 'it-caja', 40,
+              unidadeBase: 'un', duvida: duvida),
         ]);
       });
       await irParaEstoque(tester);
 
-      expect(find.byType(AlertaDuvida), findsOneWidget, reason: 'só o item duvidoso tem alerta');
+      expect(find.byType(AlertaDuvida), findsOneWidget,
+          reason: 'só o item duvidoso tem alerta');
 
       await tester.tap(find.byType(AlertaDuvida));
       await tester.pumpAndSettle();
 
-      expect(find.text('POLPA CAJÁ'), findsNWidgets(2), reason: 'na lista e no título da explicação');
+      expect(find.text('POLPA CAJÁ'), findsNWidgets(2),
+          reason: 'na lista e no título da explicação');
       expect(find.textContaining('contagem sem valor'), findsOneWidget);
       expect(find.textContaining('soma un + resto'), findsOneWidget);
     });
 
-    testWidgets('saldo zero com alerta continua aparecendo (senão a contagem sem valor some)', (tester) async {
+    testWidgets(
+        'saldo zero com alerta continua aparecendo (senão a contagem sem valor some)',
+        (tester) async {
       await abrirApp(tester, configurar: (s) {
         s.responder('GET', '/saldo', [
-          saldoJson('SEM VALOR', 'it-sv', 0, duvida: 'contagem sem valor (não entra no saldo)'),
+          saldoJson('SEM VALOR', 'it-sv', 0,
+              duvida: 'contagem sem valor (não entra no saldo)'),
           saldoJson('ZERADO', 'it-zero', 0),
         ]);
       });
@@ -157,11 +195,14 @@ void main() {
       expect(find.text('ZERADO'), findsNothing);
     });
 
-    testWidgets('o filtro "Só com alerta" mostra apenas os itens duvidosos e conta quantos são', (tester) async {
+    testWidgets(
+        'o filtro "Só com alerta" mostra apenas os itens duvidosos e conta quantos são',
+        (tester) async {
       await abrirApp(tester, configurar: (s) {
         s.responder('GET', '/saldo', [
           saldoJson('COCADA', 'it-balde', 7950),
-          saldoJson('POLPA CAJÁ', 'it-caja', 40, unidadeBase: 'un', duvida: duvida),
+          saldoJson('POLPA CAJÁ', 'it-caja', 40,
+              unidadeBase: 'un', duvida: duvida),
         ]);
       });
       await irParaEstoque(tester);
@@ -173,8 +214,11 @@ void main() {
       expect(find.text('COCADA'), findsNothing);
     });
 
-    testWidgets('sem nenhum item duvidoso o filtro nem aparece', (tester) async {
-      await abrirApp(tester, configurar: (s) => s.responder('GET', '/saldo', [saldoJson('COCADA', 'it-balde', 7950)]));
+    testWidgets('sem nenhum item duvidoso o filtro nem aparece',
+        (tester) async {
+      await abrirApp(tester,
+          configurar: (s) => s.responder(
+              'GET', '/saldo', [saldoJson('COCADA', 'it-balde', 7950)]));
 
       await irParaEstoque(tester);
 

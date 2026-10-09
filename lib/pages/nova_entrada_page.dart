@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/models.dart';
 import '../auth/auth_store.dart';
 import '../data/catalogo_store.dart';
+import '../data/formulas_store.dart';
 import '../data/rascunho_entrada.dart';
 import 'item_entrada_sheet.dart';
 import 'resumo_entrada_page.dart';
@@ -20,12 +21,12 @@ class NovaEntradaPage extends StatefulWidget {
 class _NovaEntradaPageState extends State<NovaEntradaPage> {
   late final RascunhoEntrada _rascunho;
   final _busca = TextEditingController();
-  String? _categoriaId;
 
   @override
   void initState() {
     super.initState();
-    _rascunho = RascunhoEntrada(usuarioId: context.read<AuthStore>().usuario!.id);
+    _rascunho =
+        RascunhoEntrada(usuarioId: context.read<AuthStore>().usuario!.id);
     final catalogo = context.read<CatalogoStore>();
     if (catalogo.catalogo == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) => catalogo.atualizar());
@@ -44,10 +45,15 @@ class _NovaEntradaPageState extends State<NovaEntradaPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Descartar entrada?'),
-        content: Text('Você tem ${_rascunho.total} ${_rascunho.total == 1 ? 'linha' : 'linhas'} que ainda não foram salvas.'),
+        content: Text(
+            'Você tem ${_rascunho.total} ${_rascunho.total == 1 ? 'linha' : 'linhas'} que ainda não foram salvas.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Continuar editando')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Descartar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Continuar editando')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Descartar')),
         ],
       ),
     );
@@ -55,12 +61,14 @@ class _NovaEntradaPageState extends State<NovaEntradaPage> {
   }
 
   void _revisar() {
-    Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ResumoEntradaPage(rascunho: _rascunho)));
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (_) => ResumoEntradaPage(rascunho: _rascunho)));
   }
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<CatalogoStore>();
+    final formulas = context.watch<FormulasStore>();
     final catalogo = store.catalogo;
 
     return ListenableBuilder(
@@ -72,30 +80,56 @@ class _NovaEntradaPageState extends State<NovaEntradaPage> {
           final navigator = Navigator.of(context);
           if (await _confirmarSaida()) navigator.pop();
         },
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Nova entrada'),
-            // maybePop respeita o aviso de "descartar entrada?" (PopScope)
-            leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
-          ),
-          body: catalogo == null ? _SemCatalogo(store: store) : _Corpo(
-            catalogo: catalogo,
-            store: store,
-            busca: _busca,
-            categoriaId: _categoriaId,
-            rascunho: _rascunho,
-            aoMudarCategoria: (id) => setState(() => _categoriaId = id),
-            aoBuscar: () => setState(() {}),
-          ),
-          bottomNavigationBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: FilledButton.icon(
-                onPressed: _rascunho.total == 0 ? null : _revisar,
-                icon: const Icon(Icons.fact_check_outlined),
-                label: Text('Revisar entrada (${_rascunho.total})'),
+        child: catalogo == null
+            ? _tela(body: _SemCatalogo(store: store))
+            : DefaultTabController(
+                // uma aba por categoria, mais "Todos"; o tamanho muda se o catálogo for atualizado
+                key: ValueKey(catalogo.categorias.length),
+                length: catalogo.categorias.length + 1,
+                child: _tela(
+                  abas: [
+                    const Tab(text: 'Todos'),
+                    for (final c in catalogo.categorias) Tab(text: c.nome),
+                  ],
+                  body: _Corpo(
+                    catalogo: catalogo,
+                    formulas: formulas,
+                    store: store,
+                    busca: _busca,
+                    rascunho: _rascunho,
+                    aoBuscar: () => setState(() {}),
+                  ),
+                ),
               ),
-            ),
+      ),
+    );
+  }
+
+  Widget _tela({required Widget body, List<Tab>? abas}) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Nova entrada'),
+        // maybePop respeita o aviso de "descartar entrada?" (PopScope)
+        leading: BackButton(onPressed: () => Navigator.of(context).maybePop()),
+        bottom: abas == null
+            ? null
+            : TabBar(
+                isScrollable: true,
+                tabAlignment: TabAlignment.start,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.amber,
+                tabs: abas,
+              ),
+      ),
+      body: body,
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: FilledButton.icon(
+            onPressed: _rascunho.total == 0 ? null : _revisar,
+            icon: const Icon(Icons.fact_check_outlined),
+            label: Text('Revisar entrada (${_rascunho.total})'),
           ),
         ),
       ),
@@ -118,9 +152,14 @@ class _SemCatalogo extends StatelessWidget {
             : Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(store.aviso ?? 'O catálogo de itens ainda não foi carregado.', textAlign: TextAlign.center),
+                  Text(
+                      store.aviso ??
+                          'O catálogo de itens ainda não foi carregado.',
+                      textAlign: TextAlign.center),
                   const SizedBox(height: 12),
-                  FilledButton(onPressed: store.atualizar, child: const Text('Tentar de novo')),
+                  FilledButton(
+                      onPressed: store.atualizar,
+                      child: const Text('Tentar de novo')),
                 ],
               ),
       ),
@@ -131,25 +170,23 @@ class _SemCatalogo extends StatelessWidget {
 class _Corpo extends StatelessWidget {
   const _Corpo({
     required this.catalogo,
+    required this.formulas,
     required this.store,
     required this.busca,
-    required this.categoriaId,
     required this.rascunho,
-    required this.aoMudarCategoria,
     required this.aoBuscar,
   });
 
   final Catalogo catalogo;
+  final FormulasStore formulas;
   final CatalogoStore store;
   final TextEditingController busca;
-  final String? categoriaId;
   final RascunhoEntrada rascunho;
-  final void Function(String?) aoMudarCategoria;
   final VoidCallback aoBuscar;
 
   @override
   Widget build(BuildContext context) {
-    final itens = store.itens(categoriaId: categoriaId, busca: busca.text);
+    final categorias = [null, ...catalogo.categorias.map((c) => c.id)];
     return Column(
       children: [
         if (store.aviso != null)
@@ -157,10 +194,11 @@ class _Corpo extends StatelessWidget {
             width: double.infinity,
             color: Colors.orange.shade50,
             padding: const EdgeInsets.all(8),
-            child: Text(store.aviso!, style: TextStyle(color: Colors.orange.shade900)),
+            child: Text(store.aviso!,
+                style: TextStyle(color: Colors.orange.shade900)),
           ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+          padding: const EdgeInsets.fromLTRB(10, 12, 10, 4),
           child: TextField(
             controller: busca,
             onChanged: (_) => aoBuscar(),
@@ -172,71 +210,90 @@ class _Corpo extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(
-          height: 48,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
+        Expanded(
+          child: TabBarView(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                child: ChoiceChip(
-                  label: const Text('Todos'),
-                  selected: categoriaId == null,
-                  onSelected: (_) => aoMudarCategoria(null),
-                ),
-              ),
-              for (final c in catalogo.categorias)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-                  child: ChoiceChip(
-                    label: Text(c.nome),
-                    selected: categoriaId == c.id,
-                    onSelected: (_) => aoMudarCategoria(c.id),
-                  ),
+              for (final categoriaId in categorias)
+                _ListaDeItens(
+                  catalogo: catalogo,
+                  formulas: formulas,
+                  itens:
+                      store.itens(categoriaId: categoriaId, busca: busca.text),
+                  rascunho: rascunho,
                 ),
             ],
           ),
         ),
-        Expanded(
-          child: itens.isEmpty
-              ? const Center(child: Text('Nenhum item encontrado.'))
-              : ListView.builder(
-                  itemCount: itens.length,
-                  itemBuilder: (context, i) {
-                    final item = itens[i];
-                    final local = catalogo.local(item.localPadraoId)?.nome;
-                    final quantas = rascunho.totalDoItem(item.id);
-                    Categoria? categoria;
-                    for (final c in catalogo.categorias) {
-                      if (c.id == item.categoriaId) {
-                        categoria = c;
-                        break;
-                      }
-                    }
-                    return ListTile(
-                      title: Text([if (item.sku != null) item.sku!, item.nome].join(' · ')),
-                      subtitle: Text([
-                        if (categoria != null) categoria.nome,
-                        if (item.grupoVisual.isNotEmpty) item.grupoVisual,
-                        if (local != null) local,
-                        item.origemSugerida == 'producao' ? 'produção' : 'compra',
-                        if (item.controlaRecipiente) 'pesar cada recipiente',
-                      ].join(' · ')),
-                      trailing: quantas > 0
-                          ? Badge(label: Text('$quantas'), child: const Icon(Icons.check_circle, color: Colors.green))
-                          : const Icon(Icons.chevron_right),
-                      onTap: () => mostrarItemEntrada(
-                        context: context,
-                        item: item,
-                        rascunho: rascunho,
-                        localNome: local,
-                      ),
-                    );
-                  },
-                ),
-        ),
       ],
+    );
+  }
+}
+
+class _ListaDeItens extends StatelessWidget {
+  const _ListaDeItens(
+      {required this.catalogo,
+      required this.formulas,
+      required this.itens,
+      required this.rascunho});
+
+  final Catalogo catalogo;
+  final FormulasStore formulas;
+  final List<ItemCatalogo> itens;
+  final RascunhoEntrada rascunho;
+
+  @override
+  Widget build(BuildContext context) {
+    if (itens.isEmpty) {
+      return const Center(child: Text('Nenhum item encontrado.'));
+    }
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 8),
+      itemCount: itens.length,
+      itemBuilder: (context, i) {
+        final item = itens[i];
+        final local = catalogo.local(item.localPadraoId)?.nome;
+        final temFormula = formulas.temFormula(item.id);
+        final quantas = rascunho.totalDoItem(item.id);
+        Categoria? categoria;
+        for (final c in catalogo.categorias) {
+          if (c.id == item.categoriaId) {
+            categoria = c;
+            break;
+          }
+        }
+        return Card(
+          margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          elevation: 3,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          clipBehavior: Clip.antiAlias,
+          child: ListTile(
+            title: Text(
+              [if (item.sku != null) item.sku!, item.nome].join(' · '),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text([
+              if (categoria != null) categoria.nome,
+              if (item.grupoVisual.isNotEmpty) item.grupoVisual,
+              if (local != null) local,
+              item.origemSugerida == 'producao' ? 'produção' : 'compra',
+              if (temFormula) 'tem fórmula',
+              if (item.controlaRecipiente) 'pesar cada recipiente',
+            ].join(' · ')),
+            trailing: quantas > 0
+                ? Badge(
+                    label: Text('$quantas'),
+                    child: const Icon(Icons.check_circle, color: Colors.green))
+                : const Icon(Icons.chevron_right),
+            onTap: () => mostrarItemEntrada(
+              context: context,
+              item: item,
+              rascunho: rascunho,
+              localNome: local,
+              localId: item.localPadraoId,
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -3,7 +3,8 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 
 /// Baixa [url] para [destino], seguindo os redirecionamentos do GitHub, e informa o progresso (0 a 1).
-Future<void> baixarArquivo(String url, File destino, {void Function(double progresso)? aoProgredir}) async {
+Future<void> baixarArquivo(String url, File destino,
+    {void Function(double progresso)? aoProgredir}) async {
   final cliente = http.Client();
   try {
     final resposta = await cliente.send(http.Request('GET', Uri.parse(url)));

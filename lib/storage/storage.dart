@@ -33,7 +33,8 @@ class GetStorageKeyValueStore implements KeyValueStore {
 class FlutterSecureStore implements SecureStore {
   FlutterSecureStore([FlutterSecureStorage? storage])
       : _storage = storage ??
-            const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
+            const FlutterSecureStorage(
+                aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   final FlutterSecureStorage _storage;
 
@@ -41,7 +42,8 @@ class FlutterSecureStore implements SecureStore {
   Future<String?> ler(String chave) => _storage.read(key: chave);
 
   @override
-  Future<void> gravar(String chave, String valor) => _storage.write(key: chave, value: valor);
+  Future<void> gravar(String chave, String valor) =>
+      _storage.write(key: chave, value: valor);
 
   @override
   Future<void> remover(String chave) => _storage.delete(key: chave);

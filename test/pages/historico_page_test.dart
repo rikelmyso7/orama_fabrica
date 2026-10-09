@@ -5,7 +5,8 @@ import 'package:orama_fabrica2/data/entrada_pendente.dart';
 import '../support/app_de_teste.dart';
 import '../support/servidor_falso.dart';
 
-EntradaPendente pendente(String id, String nome, String quantidade) => EntradaPendente(
+EntradaPendente pendente(String id, String nome, String quantidade) =>
+    EntradaPendente(
       id: id,
       usuarioId: 'u-func',
       itemId: 'it-cookie',
@@ -27,10 +28,17 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('mostra os lançamentos do dia com quantidade, local, lote e etiqueta', (tester) async {
+  testWidgets(
+      'mostra os lançamentos do dia com quantidade, local, lote e etiqueta',
+      (tester) async {
     await abrirApp(tester, configurar: (s) {
       s.responder('GET', '/movimentos', [
-        movimentoJson(item: 'COCADA', quantidade: 4100, unidade: 'g', lote: 'L7', etiqueta: 'R000001'),
+        movimentoJson(
+            item: 'COCADA',
+            quantidade: 4100,
+            unidade: 'g',
+            lote: 'L7',
+            etiqueta: 'R000001'),
         movimentoJson(id: 'm2', item: 'BROWNIE', quantidade: 12),
       ]);
     });
@@ -42,7 +50,9 @@ void main() {
     expect(find.textContaining('Câmara frigorífica'), findsNWidgets(2));
   });
 
-  testWidgets('lançamento importado com dúvida mostra o alerta, o motivo e o texto original', (tester) async {
+  testWidgets(
+      'lançamento importado com dúvida mostra o alerta, o motivo e o texto original',
+      (tester) async {
     await abrirApp(tester, configurar: (s) {
       s.responder('GET', '/movimentos', [
         movimentoJson(id: 'm-ok', item: 'BROWNIE'),
@@ -58,7 +68,8 @@ void main() {
       ]);
     });
 
-    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget, reason: 'só o lançamento duvidoso tem alerta');
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget,
+        reason: 'só o lançamento duvidoso tem alerta');
 
     await tester.tap(find.byIcon(Icons.warning_amber_rounded));
     await tester.pumpAndSettle();
@@ -70,21 +81,31 @@ void main() {
   testWidgets('a consulta do dia pede só aquele dia à API', (tester) async {
     final m = await abrirApp(tester);
 
-    final q = m.servidor.chamadas('GET', '/movimentos').first.uri.queryParameters;
+    final q =
+        m.servidor.chamadas('GET', '/movimentos').first.uri.queryParameters;
     expect(q['de'], dia(DateTime.now()));
     expect(q['ate'], dia(DateTime.now()));
   });
 
-  testWidgets('dia anterior consulta aquele dia, e em "hoje" não há dia seguinte', (tester) async {
+  testWidgets(
+      'dia anterior consulta aquele dia, e em "hoje" não há dia seguinte',
+      (tester) async {
     final m = await abrirApp(tester);
-    IconButton seguinte() => tester.widget<IconButton>(find.widgetWithIcon(IconButton, Icons.chevron_right));
+    IconButton seguinte() => tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.arrow_forward));
     expect(seguinte().onPressed, isNull);
 
     await tester.tap(find.byTooltip('Dia anterior'));
     await tester.pumpAndSettle();
 
     final ontem = DateTime.now().subtract(const Duration(days: 1));
-    expect(m.servidor.chamadas('GET', '/movimentos').last.uri.queryParameters['de'], dia(ontem));
+    expect(
+        m.servidor
+            .chamadas('GET', '/movimentos')
+            .last
+            .uri
+            .queryParameters['de'],
+        dia(ontem));
     expect(seguinte().onPressed, isNotNull);
   });
 
@@ -94,7 +115,9 @@ void main() {
     expect(find.text('Nenhum lançamento neste dia.'), findsOneWidget);
   });
 
-  testWidgets('sem internet avisa que o histórico do servidor não foi carregado', (tester) async {
+  testWidgets(
+      'sem internet avisa que o histórico do servidor não foi carregado',
+      (tester) async {
     final m = await abrirApp(tester);
     m.servidor.offline = true;
 
@@ -103,17 +126,21 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('O histórico do servidor não foi carregado.'), findsOneWidget);
+    expect(find.textContaining('O histórico do servidor não foi carregado.'),
+        findsOneWidget);
   });
 
-  testWidgets('estorno: pede motivo e senha, manda para a API e recarrega', (tester) async {
+  testWidgets('estorno: pede motivo e senha, manda para a API e recarrega',
+      (tester) async {
     var carregamentos = 0;
     final m = await abrirApp(tester, configurar: (s) {
       s.rota('GET', '/movimentos', (_) {
         carregamentos++;
-        return json([movimentoJson(id: 'm-1', item: 'BROWNIE', quantidade: 12)]);
+        return json(
+            [movimentoJson(id: 'm-1', item: 'BROWNIE', quantidade: 12)]);
       });
-      s.rota('POST', '/movimentos/m-1/estorno', (_) => json({'status': 'criado'}));
+      s.rota(
+          'POST', '/movimentos/m-1/estorno', (_) => json({'status': 'criado'}));
     });
 
     await abrirMenu(tester);
@@ -127,44 +154,63 @@ void main() {
     expect(find.text('Informe a senha'), findsOneWidget);
     expect(m.servidor.chamadas('POST', '/movimentos/m-1/estorno'), isEmpty);
 
-    await tester.enterText(find.widgetWithText(TextFormField, 'Motivo'), 'lançado errado');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Senha de administrador'), 'autoriza-xyz');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Motivo'), 'lançado errado');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Senha de administrador'),
+        'autoriza-xyz');
     await tester.tap(find.widgetWithText(FilledButton, 'Estornar'));
     await tester.pumpAndSettle();
 
-    final corpo = m.servidor.chamadas('POST', '/movimentos/m-1/estorno').single.corpo as Map;
+    final corpo = m.servidor
+        .chamadas('POST', '/movimentos/m-1/estorno')
+        .single
+        .corpo as Map;
     expect(corpo['motivo'], 'lançado errado');
     expect(corpo['senha'], 'autoriza-xyz');
     expect(corpo['novoId'], isNotEmpty);
     expect(find.text('Lançamento estornado.'), findsOneWidget);
-    expect(carregamentos, 2, reason: 'carregou ao abrir e recarregou depois do estorno');
+    expect(carregamentos, 2,
+        reason: 'carregou ao abrir e recarregou depois do estorno');
   });
 
-  testWidgets('senha de administrador errada mostra a mensagem da API', (tester) async {
+  testWidgets('senha de administrador errada mostra a mensagem da API',
+      (tester) async {
     await abrirApp(tester, configurar: (s) {
       s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]);
-      s.rota('POST', '/movimentos/m-1/estorno', (_) => problema(403, 'senha_invalida', 'Senha de administrador incorreta.'));
+      s.rota(
+          'POST',
+          '/movimentos/m-1/estorno',
+          (_) => problema(
+              403, 'senha_invalida', 'Senha de administrador incorreta.'));
     });
 
     await abrirMenu(tester);
     await tester.tap(find.text('Estornar'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Motivo'), 'erro');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Senha de administrador'), 'errada');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Motivo'), 'erro');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Senha de administrador'), 'errada');
     await tester.tap(find.widgetWithText(FilledButton, 'Estornar'));
     await tester.pumpAndSettle();
 
     expect(find.text('Senha de administrador incorreta.'), findsOneWidget);
   });
 
-  testWidgets('estorno exige conexão: sem internet avisa que não foi feito', (tester) async {
-    final m = await abrirApp(tester, configurar: (s) => s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]));
+  testWidgets('estorno exige conexão: sem internet avisa que não foi feito',
+      (tester) async {
+    final m = await abrirApp(tester,
+        configurar: (s) =>
+            s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]));
 
     await abrirMenu(tester);
     await tester.tap(find.text('Estornar'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Motivo'), 'erro');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Senha de administrador'), 'x');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Motivo'), 'erro');
+    await tester.enterText(
+        find.widgetWithText(TextFormField, 'Senha de administrador'), 'x');
     m.servidor.offline = true;
     await tester.tap(find.widgetWithText(FilledButton, 'Estornar'));
     await tester.pumpAndSettle();
@@ -173,7 +219,9 @@ void main() {
   });
 
   testWidgets('cancelar o estorno não chama a API', (tester) async {
-    final m = await abrirApp(tester, configurar: (s) => s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]));
+    final m = await abrirApp(tester,
+        configurar: (s) =>
+            s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]));
 
     await abrirMenu(tester);
     await tester.tap(find.text('Estornar'));
@@ -181,15 +229,24 @@ void main() {
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
 
-    expect(m.servidor.requisicoes.where((r) => r.caminho.contains('estorno')), isEmpty);
+    expect(m.servidor.requisicoes.where((r) => r.caminho.contains('estorno')),
+        isEmpty);
   });
 
-  testWidgets('lançamento já estornado, ajuste e estorno não oferecem estornar', (tester) async {
+  testWidgets('lançamento já estornado, ajuste e estorno não oferecem estornar',
+      (tester) async {
     await abrirApp(tester, configurar: (s) {
       s.responder('GET', '/movimentos', [
         movimentoJson(id: 'a', item: 'JÁ ESTORNADO', estornado: true),
-        movimentoJson(id: 'b', item: 'AJUSTE', tipo: 'ajuste', quantidade: -250, motivo: 'quebra', autorizadoPor: 'Administrador'),
-        movimentoJson(id: 'c', item: 'O ESTORNO', tipo: 'saida', estornaId: 'a'),
+        movimentoJson(
+            id: 'b',
+            item: 'AJUSTE',
+            tipo: 'ajuste',
+            quantidade: -250,
+            motivo: 'quebra',
+            autorizadoPor: 'Administrador'),
+        movimentoJson(
+            id: 'c', item: 'O ESTORNO', tipo: 'saida', estornaId: 'a'),
       ]);
     });
 
@@ -199,8 +256,10 @@ void main() {
     expect(find.textContaining('Autorizado por Administrador'), findsOneWidget);
   });
 
-  testWidgets('perfil só de leitura vê o histórico mas não lança nem estorna', (tester) async {
-    await abrirApp(tester, usuario: {...usuarioFabricaJson, 'papel': 'leitura'}, configurar: (s) {
+  testWidgets('perfil só de leitura vê o histórico mas não lança nem estorna',
+      (tester) async {
+    await abrirApp(tester, usuario: {...usuarioFabricaJson, 'papel': 'leitura'},
+        configurar: (s) {
       s.responder('GET', '/movimentos', [movimentoJson(id: 'm-1')]);
     });
 
@@ -209,7 +268,9 @@ void main() {
     expect(find.byTooltip('Opções'), findsNothing);
   });
 
-  testWidgets('entradas aguardando envio aparecem acima do histórico, e descartar pede confirmação', (tester) async {
+  testWidgets(
+      'entradas aguardando envio aparecem acima do histórico, e descartar pede confirmação',
+      (tester) async {
     final m = await abrirApp(tester);
     m.servidor.offline = true;
     await m.deps.fila.adicionar([pendente('p1', 'BROWNIE', '7')]);
@@ -226,13 +287,14 @@ void main() {
     expect(m.deps.fila.doUsuario('u-func'), hasLength(1));
   });
 
-  testWidgets('sair com entradas não confirmadas avisa que ficam guardadas', (tester) async {
+  testWidgets('sair com entradas não confirmadas avisa que ficam guardadas',
+      (tester) async {
     final m = await abrirApp(tester);
     m.servidor.offline = true;
     await m.deps.fila.adicionar([pendente('p1', 'BROWNIE', '7')]);
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('Menu'));
+    await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Sair'));
     await tester.pumpAndSettle();
@@ -241,6 +303,7 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Sair'));
     await tester.pumpAndSettle();
     expect(m.deps.auth.logado, isFalse);
-    expect(m.deps.fila.doUsuario('u-func'), hasLength(1), reason: 'a entrada continua guardada');
+    expect(m.deps.fila.doUsuario('u-func'), hasLength(1),
+        reason: 'a entrada continua guardada');
   });
 }

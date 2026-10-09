@@ -10,7 +10,8 @@ class ApiException implements Exception {
   final String mensagem;
   final Map<String, dynamic> extras;
 
-  const ApiException(this.status, this.codigo, this.mensagem, [this.extras = const {}]);
+  const ApiException(this.status, this.codigo, this.mensagem,
+      [this.extras = const {}]);
 
   bool get naoAutorizado => status == 401;
 
@@ -34,7 +35,9 @@ class ApiClient {
     required String baseUrl,
     http.Client? client,
     this.timeout = const Duration(seconds: 20),
-  })  : _base = Uri.parse(baseUrl.endsWith('/') ? baseUrl.substring(0, baseUrl.length - 1) : baseUrl),
+  })  : _base = Uri.parse(baseUrl.endsWith('/')
+            ? baseUrl.substring(0, baseUrl.length - 1)
+            : baseUrl),
         _client = client ?? http.Client();
 
   final Uri _base;
@@ -51,16 +54,22 @@ class ApiClient {
         queryParameters: (query == null || query.isEmpty) ? null : query,
       );
 
-  Map<String, String> _cabecalhos({required bool autenticado, bool json = false}) => {
+  Map<String, String> _cabecalhos(
+          {required bool autenticado, bool json = false}) =>
+      {
         'Accept': 'application/json',
         if (json) 'Content-Type': 'application/json; charset=utf-8',
         if (autenticado && token != null) 'Authorization': 'Bearer $token',
       };
 
-  Future<dynamic> get(String caminho, {Map<String, String>? query}) =>
-      _enviar(() => _client.get(_uri(caminho, query), headers: _cabecalhos(autenticado: true)), autenticado: true);
+  Future<dynamic> get(String caminho, {Map<String, String>? query}) => _enviar(
+      () => _client.get(_uri(caminho, query),
+          headers: _cabecalhos(autenticado: true)),
+      autenticado: true);
 
-  Future<dynamic> post(String caminho, {Object? corpo, bool autenticado = true}) => _enviar(
+  Future<dynamic> post(String caminho,
+          {Object? corpo, bool autenticado = true}) =>
+      _enviar(
         () => _client.post(
           _uri(caminho, null),
           headers: _cabecalhos(autenticado: autenticado, json: true),
@@ -69,7 +78,17 @@ class ApiClient {
         autenticado: autenticado,
       );
 
-  Future<dynamic> _enviar(Future<http.Response> Function() requisicao, {required bool autenticado}) async {
+  Future<dynamic> put(String caminho, {Object? corpo}) => _enviar(
+        () => _client.put(
+          _uri(caminho, null),
+          headers: _cabecalhos(autenticado: true, json: true),
+          body: corpo == null ? null : jsonEncode(corpo),
+        ),
+        autenticado: true,
+      );
+
+  Future<dynamic> _enviar(Future<http.Response> Function() requisicao,
+      {required bool autenticado}) async {
     final http.Response resposta;
     try {
       resposta = await requisicao().timeout(timeout);
@@ -87,7 +106,8 @@ class ApiClient {
     final erro = _lerErro(resposta.statusCode, texto);
     if (resposta.statusCode == 401 && autenticado) {
       onNaoAutorizado?.call();
-      throw const ApiException(401, 'nao_autorizado', 'Sua sessão expirou. Entre de novo.');
+      throw const ApiException(
+          401, 'nao_autorizado', 'Sua sessão expirou. Entre de novo.');
     }
     throw erro;
   }

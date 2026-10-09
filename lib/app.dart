@@ -9,6 +9,7 @@ import 'auth/auth_store.dart';
 import 'data/catalogo_store.dart';
 import 'data/fila_entradas.dart';
 import 'data/fila_operacoes.dart';
+import 'data/formulas_store.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/splash_page.dart';
@@ -29,6 +30,7 @@ class AppDependencias {
     required this.catalogo,
     required this.fila,
     required this.filaOperacoes,
+    required this.formulas,
     this.atualizacao,
   });
 
@@ -38,6 +40,7 @@ class AppDependencias {
   final CatalogoStore catalogo;
   final FilaEntradas fila;
   final FilaOperacoes filaOperacoes;
+  final FormulasStore formulas;
 
   /// Verificação de versão nova pelos releases do GitHub. Nulo desliga a consulta (testes, web).
   final ServicoAtualizacao? atualizacao;
@@ -58,6 +61,7 @@ class AppDependencias {
       catalogo: CatalogoStore(api, store),
       fila: FilaEntradas(api, store),
       filaOperacoes: FilaOperacoes(api, store),
+      formulas: FormulasStore(store),
       atualizacao: atualizacao,
     );
   }
@@ -66,7 +70,8 @@ class AppDependencias {
 ThemeData temaDoApp() => ThemeData(
       colorScheme: ColorScheme.fromSeed(seedColor: corPrincipal),
       useMaterial3: true,
-      appBarTheme: const AppBarTheme(backgroundColor: corPrincipal, foregroundColor: Colors.white),
+      appBarTheme: const AppBarTheme(
+          backgroundColor: corPrincipal, foregroundColor: Colors.white),
     );
 
 class OramaApp extends StatelessWidget {
@@ -86,6 +91,7 @@ class OramaApp extends StatelessWidget {
         ChangeNotifierProvider<CatalogoStore>.value(value: deps.catalogo),
         ChangeNotifierProvider<FilaEntradas>.value(value: deps.fila),
         ChangeNotifierProvider<FilaOperacoes>.value(value: deps.filaOperacoes),
+        ChangeNotifierProvider<FormulasStore>.value(value: deps.formulas),
         Provider<ServicoAtualizacao?>.value(value: deps.atualizacao),
       ],
       child: MaterialApp(
@@ -93,7 +99,9 @@ class OramaApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: temaDoApp(),
         builder: (context, child) => Center(
-          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: larguraMaximaDoApp), child: child),
+          child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: larguraMaximaDoApp),
+              child: child),
         ),
         locale: const Locale('pt', 'BR'),
         supportedLocales: const [Locale('pt', 'BR')],
@@ -131,7 +139,9 @@ class _AuthGateState extends State<AuthGate> {
     return switch (auth.estado) {
       EstadoAuth.carregando => const SplashPage(),
       EstadoAuth.deslogado => const LoginPage(),
-      EstadoAuth.logado => (auth.usuario?.podeConsultar ?? false) ? const HomePage() : const SemAcessoPage(),
+      EstadoAuth.logado => (auth.usuario?.podeConsultar ?? false)
+          ? const HomePage()
+          : const SemAcessoPage(),
     };
   }
 }
@@ -150,9 +160,12 @@ class SemAcessoPage extends StatelessWidget {
             children: [
               const Icon(Icons.lock_outline, size: 48),
               const SizedBox(height: 12),
-              const Text('Seu perfil não tem acesso ao app da fábrica.', textAlign: TextAlign.center),
+              const Text('Seu perfil não tem acesso ao app da fábrica.',
+                  textAlign: TextAlign.center),
               const SizedBox(height: 16),
-              FilledButton(onPressed: () => context.read<AuthStore>().sair(), child: const Text('Sair')),
+              FilledButton(
+                  onPressed: () => context.read<AuthStore>().sair(),
+                  child: const Text('Sair')),
             ],
           ),
         ),

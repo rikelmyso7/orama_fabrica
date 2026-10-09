@@ -9,8 +9,11 @@ import '../data/fila_entradas.dart';
 import '../data/fila_operacoes.dart';
 import '../update/atualizacao.dart';
 import 'atualizacao_dialog.dart';
+import 'catalogo_admin_page.dart';
 import 'estoque_page.dart';
+import 'formulas_page.dart';
 import 'historico_page.dart';
+import 'movimentacoes_page.dart';
 import 'nova_producao_page.dart';
 
 /// Tela principal: hoje (histórico e entradas aguardando envio) e estoque. Também mantém o app
@@ -89,12 +92,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         context: context,
         builder: (ctx) => AlertDialog(
           title: const Text('Sair mesmo assim?'),
-          content: Text('Há $pendentes ${pendentes == 1 ? 'entrada' : 'entradas'} que ainda não '
+          content: Text(
+              'Há $pendentes ${pendentes == 1 ? 'entrada' : 'entradas'} que ainda não '
               'foram confirmadas pelo servidor. Elas ficam guardadas no aparelho e são enviadas '
               'quando você entrar de novo.'),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Sair')),
+            TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancelar')),
+            FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Sair')),
           ],
         ),
       );
@@ -103,42 +111,179 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     await auth.sair();
   }
 
+  static const _titulos = ['Hoje', 'Estoque', 'Movimentações'];
+  static const _abaProducao = 3;
+
+  void _abrir(Widget pagina) => Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => pagina));
+
   @override
   Widget build(BuildContext context) {
     final usuario = context.watch<AuthStore>().usuario;
+    final podeLancar = usuario?.podeLancar ?? false;
     return Scaffold(
       appBar: AppBar(
-        title: Text(_aba == 0 ? 'Hoje' : 'Estoque'),
-        actions: [
-          if (usuario?.podeLancar ?? false)
-            IconButton(
-              tooltip: 'Nova produção',
-              icon: const Icon(Icons.precision_manufacturing_outlined),
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NovaProducaoPage())),
-            ),
-          const _IndicadorDeEnvio(),
-          PopupMenuButton<String>(
-            tooltip: 'Menu',
-            onSelected: (v) {
-              if (v == 'sair') _sair();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(enabled: false, child: Text(usuario?.nome ?? '')),
-              const PopupMenuItem(value: 'sair', child: Text('Sair')),
-            ],
-          ),
+        title: Text(_titulos[_aba]),
+        actions: const [_IndicadorDeEnvio()],
+      ),
+      drawer: _MenuLateral(
+        usuarioNome: usuario?.nome ?? '',
+        ehAdmin: usuario?.ehAdmin ?? false,
+        abrirItens: () => _abrir(const CatalogoAdminPage()),
+        abrirFormulas: () => _abrir(const FormulasPage()),
+        sair: _sair,
+      ),
+      body: IndexedStack(
+        index: _aba,
+        children: [
+          const HistoricoPage(),
+          const EstoquePage(),
+          MovimentacoesPage(ativa: _aba == 2)
         ],
       ),
-      body: IndexedStack(index: _aba, children: const [HistoricoPage(), EstoquePage()]),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _aba,
-        onDestinationSelected: (i) => setState(() => _aba = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.today_outlined), selectedIcon: Icon(Icons.today), label: 'Hoje'),
-          NavigationDestination(
-              icon: Icon(Icons.inventory_2_outlined), selectedIcon: Icon(Icons.inventory_2), label: 'Estoque'),
+        // "Produção" abre uma tela própria em vez de trocar de aba
+        onDestinationSelected: (i) => i == _abaProducao
+            ? _abrir(const NovaProducaoPage())
+            : setState(() => _aba = i),
+        destinations: [
+          const NavigationDestination(
+              icon: Icon(Icons.today_outlined),
+              selectedIcon: Icon(Icons.today),
+              label: 'Hoje'),
+          const NavigationDestination(
+              icon: Icon(Icons.inventory_2_outlined),
+              selectedIcon: Icon(Icons.inventory_2),
+              label: 'Estoque'),
+          const NavigationDestination(
+              icon: Icon(Icons.swap_vert_outlined),
+              selectedIcon: Icon(Icons.swap_vert),
+              label: 'Movimentações'),
+          if (podeLancar)
+            const NavigationDestination(
+                icon: Icon(Icons.precision_manufacturing_outlined),
+                label: 'Nova produção'),
         ],
       ),
+    );
+  }
+}
+
+class _MenuLateral extends StatelessWidget {
+  const _MenuLateral({
+    required this.usuarioNome,
+    required this.ehAdmin,
+    required this.abrirItens,
+    required this.abrirFormulas,
+    required this.sair,
+  });
+
+  final String usuarioNome;
+  final bool ehAdmin;
+  final VoidCallback abrirItens;
+  final VoidCallback abrirFormulas;
+  final VoidCallback sair;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.of(context).size.width / 1.4,
+      child: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            Container(
+              padding: const EdgeInsets.only(top: 20),
+              width: double.infinity,
+              height: 100,
+              decoration: const BoxDecoration(color: Color(0xff60C03D)),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    color: Colors.white,
+                    iconSize: 26,
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      usuarioNome.isEmpty ? 'Fábrica' : usuarioNome,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 26),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (ehAdmin) ...[
+              _ItemMenuLateral(
+                label: 'Itens',
+                icon: Icons.inventory_2_outlined,
+                onTap: () => _abrir(context, abrirItens),
+              ),
+              _ItemMenuLateral(
+                label: 'Fórmulas',
+                icon: Icons.receipt_long_outlined,
+                onTap: () => _abrir(context, abrirFormulas),
+              ),
+            ],
+            _ItemMenuLateral(
+              label: 'Tela Inicial',
+              icon: Icons.home_outlined,
+              onTap: () => Navigator.pop(context),
+            ),
+            _ItemMenuLateral(
+              label: 'Sair',
+              icon: Icons.logout,
+              onTap: () => _abrir(context, sair),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _abrir(BuildContext context, VoidCallback acao) {
+    Navigator.pop(context);
+    acao();
+  }
+}
+
+class _ItemMenuLateral extends StatelessWidget {
+  const _ItemMenuLateral(
+      {required this.label, required this.icon, required this.onTap});
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListTile(
+          title: Align(
+            alignment: Alignment.bottomLeft,
+            child: Row(
+              children: [
+                Text(label,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.w500, fontSize: 18)),
+                const SizedBox(width: 5),
+                Icon(icon),
+              ],
+            ),
+          ),
+          onTap: onTap,
+        ),
+        const Divider(),
+      ],
     );
   }
 }
@@ -156,14 +301,22 @@ class _IndicadorDeEnvio extends StatelessWidget {
     if (fila.enviando || filaOperacoes.enviando) {
       return const Padding(
         padding: EdgeInsets.all(14),
-        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+        child: SizedBox(
+            width: 20,
+            height: 20,
+            child:
+                CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
       );
     }
-    final aguardando = fila.aguardando(usuario.id) + filaOperacoes.aguardando(usuario.id);
-    final recusadas = fila.recusadas(usuario.id) + filaOperacoes.recusadas(usuario.id);
+    final aguardando =
+        fila.aguardando(usuario.id) + filaOperacoes.aguardando(usuario.id);
+    final recusadas =
+        fila.recusadas(usuario.id) + filaOperacoes.recusadas(usuario.id);
     if (aguardando == 0 && recusadas == 0) return const SizedBox.shrink();
     return IconButton(
-      tooltip: recusadas > 0 ? '$recusadas recusadas, $aguardando aguardando envio' : '$aguardando aguardando envio',
+      tooltip: recusadas > 0
+          ? '$recusadas recusadas, $aguardando aguardando envio'
+          : '$aguardando aguardando envio',
       onPressed: aguardando == 0
           ? null
           : () async {
@@ -173,7 +326,8 @@ class _IndicadorDeEnvio extends StatelessWidget {
       icon: Badge(
         label: Text('${aguardando + recusadas}'),
         backgroundColor: recusadas > 0 ? Colors.red : Colors.orange,
-        child: Icon(recusadas > 0 ? Icons.warning_amber : Icons.cloud_upload_outlined),
+        child: Icon(
+            recusadas > 0 ? Icons.warning_amber : Icons.cloud_upload_outlined),
       ),
     );
   }

@@ -10,6 +10,7 @@ class EntradaPendente {
   final String? varianteId;
   final String? varianteRotulo;
   final String? localNome;
+  final String? localId;
 
   /// Quantidade como será enviada ("4.1", "3.85"): texto, para não perder casas decimais.
   final String quantidade;
@@ -39,6 +40,7 @@ class EntradaPendente {
     this.varianteId,
     this.varianteRotulo,
     this.localNome,
+    this.localId,
     this.unidades,
     this.lote,
     this.validade,
@@ -59,6 +61,7 @@ class EntradaPendente {
         varianteId: varianteId,
         varianteRotulo: varianteRotulo,
         localNome: localNome,
+        localId: localId,
         unidades: unidades,
         lote: lote,
         validade: validade,
@@ -81,7 +84,8 @@ class EntradaPendente {
         'origem': origem,
         if (lote != null && lote!.trim().isNotEmpty) 'lote': lote!.trim(),
         if (validade != null) 'validade': _dia(validade!),
-        if (documento != null && documento!.trim().isNotEmpty) 'documento': documento!.trim(),
+        if (documento != null && documento!.trim().isNotEmpty)
+          'documento': documento!.trim(),
         if (textoOriginal != null) 'textoOriginal': textoOriginal,
         'ocorridoEm': ocorridoEm.toUtc().toIso8601String(),
       };
@@ -94,6 +98,7 @@ class EntradaPendente {
         'varianteId': varianteId,
         'varianteRotulo': varianteRotulo,
         'localNome': localNome,
+        'localId': localId,
         'quantidade': quantidade,
         'unidade': unidade,
         'unidades': unidades,
@@ -114,12 +119,15 @@ class EntradaPendente {
         varianteId: j['varianteId'] as String?,
         varianteRotulo: j['varianteRotulo'] as String?,
         localNome: j['localNome'] as String?,
+        localId: j['localId'] as String?,
         quantidade: j['quantidade'] as String,
         unidade: j['unidade'] as String,
         unidades: j['unidades'] as int?,
         origem: j['origem'] as String,
         lote: j['lote'] as String?,
-        validade: j['validade'] == null ? null : DateTime.parse(j['validade'] as String),
+        validade: j['validade'] == null
+            ? null
+            : DateTime.parse(j['validade'] as String),
         documento: j['documento'] as String?,
         textoOriginal: j['textoOriginal'] as String?,
         ocorridoEm: DateTime.parse(j['ocorridoEm'] as String).toLocal(),

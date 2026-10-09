@@ -10,6 +10,7 @@ import '../auth/auth_store.dart';
 import '../data/entrada_pendente.dart';
 import '../data/fila_entradas.dart';
 import '../util/numero.dart';
+import '../widgets/cabecalho_de_data.dart';
 import '../widgets/alerta_duvida.dart';
 import 'estorno_dialog.dart';
 import 'nova_entrada_page.dart';
@@ -53,7 +54,8 @@ class _HistoricoPageState extends State<HistoricoPage> {
       });
     } on SemConexaoException catch (e) {
       if (mounted) {
-        setState(() => _aviso = '${e.mensagem} O histórico do servidor não foi carregado.');
+        setState(() => _aviso =
+            '${e.mensagem} O histórico do servidor não foi carregado.');
       }
     } on ApiException catch (e) {
       if (mounted) {
@@ -71,19 +73,29 @@ class _HistoricoPageState extends State<HistoricoPage> {
     _carregar();
   }
 
+  Future<void> _escolherDia() async {
+    final escolhido = await escolherDia(context, _dia);
+    if (escolhido == null || !mounted) return;
+    setState(
+        () => _dia = DateTime(escolhido.year, escolhido.month, escolhido.day));
+    _carregar();
+  }
+
   void _mostrar(String texto) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(texto)));
   }
 
   Future<void> _novaEntrada() async {
-    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NovaEntradaPage()));
+    await Navigator.of(context)
+        .push(MaterialPageRoute<void>(builder: (_) => const NovaEntradaPage()));
     if (mounted) _carregar();
   }
 
   Future<void> _estornar(Movimento m) async {
     final dados = await showDialog<EstornoDados>(
       context: context,
-      builder: (_) => EstornoDialog(descricao: '${m.item}: ${Numero.formatar(m.quantidade, m.unidade)}'),
+      builder: (_) => EstornoDialog(
+          descricao: '${m.item}: ${Numero.formatar(m.quantidade, m.unidade)}'),
     );
     if (dados == null || !mounted) return;
     final api = context.read<OramaApi>();
@@ -110,11 +122,15 @@ class _HistoricoPageState extends State<HistoricoPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Descartar entrada?'),
-        content:
-            Text('${e.itemNome}: ${e.descricao}. Ela ainda não foi registrada no servidor e será apagada do aparelho.'),
+        content: Text(
+            '${e.itemNome}: ${e.descricao}. Ela ainda não foi registrada no servidor e será apagada do aparelho.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Descartar')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancelar')),
+          FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Descartar')),
         ],
       ),
     );
@@ -126,9 +142,11 @@ class _HistoricoPageState extends State<HistoricoPage> {
     final auth = context.watch<AuthStore>();
     final usuario = auth.usuario;
     final fila = context.watch<FilaEntradas>();
-    final pendentes = usuario == null ? const <EntradaPendente>[] : fila.doUsuario(usuario.id);
+    final pendentes = usuario == null
+        ? const <EntradaPendente>[]
+        : fila.doUsuario(usuario.id);
     final ehHoje = _dia == _hoje();
-    final cabecalho = ehHoje ? 'Hoje' : DateFormat("EEEE, dd/MM/yyyy", 'pt_BR').format(_dia);
+    final cabecalho = DateFormat("dd 'de' MMMM yyyy", 'pt_BR').format(_dia);
 
     return Scaffold(
       floatingActionButton: auth.podeLancar
@@ -145,32 +163,23 @@ class _HistoricoPageState extends State<HistoricoPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 96),
           children: [
-            Row(
-              children: [
-                IconButton(
-                  tooltip: 'Dia anterior',
-                  icon: const Icon(Icons.chevron_left),
-                  onPressed: () => _mudarDia(-1),
-                ),
-                Expanded(
-                  child: Text(cabecalho, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
-                ),
-                IconButton(
-                  tooltip: 'Dia seguinte',
-                  icon: const Icon(Icons.chevron_right),
-                  onPressed: ehHoje ? null : () => _mudarDia(1),
-                ),
-              ],
+            CabecalhoDeData(
+              texto: cabecalho,
+              aoAnterior: () => _mudarDia(-1),
+              aoProximo: ehHoje ? null : () => _mudarDia(1),
+              aoEscolher: _escolherDia,
             ),
             if (_carregando) const LinearProgressIndicator(),
             if (_aviso != null)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-                child: Text(_aviso!, style: TextStyle(color: Colors.red.shade800)),
+                child:
+                    Text(_aviso!, style: TextStyle(color: Colors.red.shade800)),
               ),
             if (ehHoje && pendentes.isNotEmpty) ...[
               const _Secao('Aguardando envio'),
-              for (final e in pendentes) _PendenteTile(entrada: e, aoDescartar: () => _descartar(e)),
+              for (final e in pendentes)
+                _PendenteTile(entrada: e, aoDescartar: () => _descartar(e)),
             ],
             const _Secao('Registrado'),
             if (_movimentos.isEmpty && !_carregando)
@@ -181,7 +190,9 @@ class _HistoricoPageState extends State<HistoricoPage> {
             for (final m in _movimentos)
               _MovimentoTile(
                 movimento: m,
-                aoEstornar: (auth.podeLancar && m.podeEstornar) ? () => _estornar(m) : null,
+                aoEstornar: (auth.podeLancar && m.podeEstornar)
+                    ? () => _estornar(m)
+                    : null,
               ),
           ],
         ),
@@ -215,7 +226,8 @@ class _PendenteTile extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       color: recusada ? Colors.red.shade50 : Colors.orange.shade50,
       child: ListTile(
-        leading: Icon(recusada ? Icons.error_outline : Icons.schedule, color: recusada ? Colors.red : Colors.orange),
+        leading: Icon(recusada ? Icons.error_outline : Icons.schedule,
+            color: recusada ? Colors.red : Colors.orange),
         title: Text('${entrada.itemNome} · ${entrada.descricao}'),
         subtitle: Text(recusada ? entrada.erro! : 'Aguardando envio'),
         trailing: Row(
@@ -225,9 +237,13 @@ class _PendenteTile extends StatelessWidget {
               IconButton(
                 tooltip: 'Tentar de novo',
                 icon: const Icon(Icons.refresh),
-                onPressed: () => context.read<FilaEntradas>().tentarNovamente(entrada.id),
+                onPressed: () =>
+                    context.read<FilaEntradas>().tentarNovamente(entrada.id),
               ),
-            IconButton(tooltip: 'Descartar', icon: const Icon(Icons.delete_outline), onPressed: aoDescartar),
+            IconButton(
+                tooltip: 'Descartar',
+                icon: const Icon(Icons.delete_outline),
+                onPressed: aoDescartar),
           ],
         ),
       ),
@@ -257,11 +273,14 @@ class _MovimentoTile extends StatelessWidget {
       if (m.motivo != null) 'Motivo: ${m.motivo}',
       if (m.autorizadoPor != null) 'Autorizado por ${m.autorizadoPor}',
     ].join(' · ');
-    final riscado = m.estornado ? const TextStyle(decoration: TextDecoration.lineThrough) : null;
+    final riscado = m.estornado
+        ? const TextStyle(decoration: TextDecoration.lineThrough)
+        : null;
 
     return ListTile(
       leading: Icon(icone, color: cor),
-      title: Text(m.variante == null ? m.item : '${m.item} · ${m.variante}', style: riscado),
+      title: Text(m.variante == null ? m.item : '${m.item} · ${m.variante}',
+          style: riscado),
       subtitle: Text(
         '${Numero.formatar(m.quantidade, m.unidade)} · $hora · ${m.local}'
         '${detalhes.isEmpty ? '' : '\n$detalhes'}'
@@ -275,7 +294,9 @@ class _MovimentoTile extends StatelessWidget {
               children: [
                 if (m.temDuvida)
                   AlertaDuvida(
-                    titulo: m.variante == null ? m.item : '${m.item} · ${m.variante}',
+                    titulo: m.variante == null
+                        ? m.item
+                        : '${m.item} · ${m.variante}',
                     motivos: [m.revisar!.trim()],
                     textoOriginal: m.textoOriginal,
                   ),
@@ -283,7 +304,9 @@ class _MovimentoTile extends StatelessWidget {
                   PopupMenuButton<String>(
                     tooltip: 'Opções',
                     onSelected: (_) => aoEstornar!(),
-                    itemBuilder: (_) => const [PopupMenuItem(value: 'estornar', child: Text('Estornar'))],
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(value: 'estornar', child: Text('Estornar'))
+                    ],
                   ),
               ],
             ),

@@ -28,20 +28,26 @@ jobs:
           VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
           echo "name=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Criar tag se não existir
+      - name: Criar tag se não existir e decidir se publica
         id: create_tag
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v${{ steps.version.outputs.name }}"
-          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
-            echo "Tag $TAG já existe, pulando release."
+          if gh release view "$TAG" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release $TAG já publicada, pulando."
             echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG já existe, mas não há release publicada: seguindo com o build."
           else
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git tag "$TAG"
             git push origin "$TAG"
-            echo "created=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "created=true" >> "$GITHUB_OUTPUT"
 
   test:
     name: Testes

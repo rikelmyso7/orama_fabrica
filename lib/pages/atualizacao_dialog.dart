@@ -4,7 +4,8 @@ import '../update/atualizacao.dart';
 
 /// Procura uma versão nova e, se houver, oferece a atualização. É opcional: "Agora não" fecha o
 /// aviso e o app segue normal. Qualquer falha na consulta é silenciosa.
-Future<void> oferecerAtualizacao(BuildContext context, ServicoAtualizacao servico) async {
+Future<void> oferecerAtualizacao(
+    BuildContext context, ServicoAtualizacao servico) async {
   final nova = await servico.verificar();
   if (nova == null || !context.mounted) return;
   await showDialog<void>(
@@ -14,7 +15,8 @@ Future<void> oferecerAtualizacao(BuildContext context, ServicoAtualizacao servic
 }
 
 class AtualizacaoDialog extends StatefulWidget {
-  const AtualizacaoDialog({super.key, required this.servico, required this.atualizacao});
+  const AtualizacaoDialog(
+      {super.key, required this.servico, required this.atualizacao});
 
   final ServicoAtualizacao servico;
   final Atualizacao atualizacao;
@@ -46,7 +48,8 @@ class _AtualizacaoDialogState extends State<AtualizacaoDialog> {
       if (mounted) {
         setState(() {
           _baixando = false;
-          _erro = 'Não foi possível baixar a atualização. Confira a conexão e tente de novo.';
+          _erro =
+              'Não foi possível baixar a atualização. Confira a conexão e tente de novo.';
         });
       }
     }
@@ -63,7 +66,8 @@ class _AtualizacaoDialogState extends State<AtualizacaoDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Versão ${widget.atualizacao.versao}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text('Versão ${widget.atualizacao.versao}',
+                  style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 8),
               Text(widget.atualizacao.notasLegiveis),
               if (_baixando) ...[
@@ -72,14 +76,20 @@ class _AtualizacaoDialogState extends State<AtualizacaoDialog> {
               ],
               if (_erro != null) ...[
                 const SizedBox(height: 12),
-                Text(_erro!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                Text(_erro!,
+                    style:
+                        TextStyle(color: Theme.of(context).colorScheme.error)),
               ],
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: _baixando ? null : () => Navigator.pop(context), child: const Text('Agora não')),
-          FilledButton(onPressed: _baixando ? null : _atualizar, child: const Text('Atualizar')),
+          TextButton(
+              onPressed: _baixando ? null : () => Navigator.pop(context),
+              child: const Text('Agora não')),
+          FilledButton(
+              onPressed: _baixando ? null : _atualizar,
+              child: const Text('Atualizar')),
         ],
       ),
     );

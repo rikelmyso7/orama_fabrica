@@ -18,7 +18,8 @@ class PesoDigitado {
 /// As linhas da entrada que o funcionário está montando, antes de salvar. Cada linha já nasce com o
 /// seu id, que é o que torna o reenvio seguro.
 class RascunhoEntrada extends ChangeNotifier {
-  RascunhoEntrada({required this.usuarioId, Uuid? uuid, DateTime Function()? agora})
+  RascunhoEntrada(
+      {required this.usuarioId, Uuid? uuid, DateTime Function()? agora})
       : _uuid = uuid ?? const Uuid(),
         _agora = agora ?? DateTime.now;
 
@@ -31,7 +32,8 @@ class RascunhoEntrada extends ChangeNotifier {
 
   int get total => _linhas.length;
 
-  int totalDoItem(String itemId) => _linhas.where((l) => l.itemId == itemId).length;
+  int totalDoItem(String itemId) =>
+      _linhas.where((l) => l.itemId == itemId).length;
 
   /// Item comum: uma linha, com a quantidade e a unidade escolhidas.
   void adicionarComum({
@@ -41,6 +43,7 @@ class RascunhoEntrada extends ChangeNotifier {
     required String origem,
     Variacao? variacao,
     String? localNome,
+    String? localId,
     String? lote,
     DateTime? validade,
     String? documento,
@@ -54,6 +57,7 @@ class RascunhoEntrada extends ChangeNotifier {
       varianteId: variacao?.id,
       varianteRotulo: variacao?.rotulo,
       localNome: localNome,
+      localId: localId,
       quantidade: Numero.paraApi(quantidade),
       unidade: unidade,
       origem: origem,
@@ -75,6 +79,7 @@ class RascunhoEntrada extends ChangeNotifier {
     required String origem,
     Variacao? variacao,
     String? localNome,
+    String? localId,
     DateTime? validade,
   }) {
     if (lote.trim().isEmpty) {
@@ -90,6 +95,7 @@ class RascunhoEntrada extends ChangeNotifier {
         varianteId: variacao?.id,
         varianteRotulo: variacao?.rotulo,
         localNome: localNome,
+        localId: localId,
         quantidade: Numero.paraApi(p.valor),
         unidade: p.unidade,
         unidades: 1,
@@ -119,7 +125,9 @@ class RascunhoEntrada extends ChangeNotifier {
   /// Hoje vale a hora atual. Outro dia (lançamento atrasado) vale o meio-dia daquele dia.
   DateTime _momentoDoDia(DateTime dia) {
     final agora = _agora();
-    if (dia.year == agora.year && dia.month == agora.month && dia.day == agora.day) {
+    if (dia.year == agora.year &&
+        dia.month == agora.month &&
+        dia.day == agora.day) {
       return agora;
     }
     return DateTime(dia.year, dia.month, dia.day, 12);
